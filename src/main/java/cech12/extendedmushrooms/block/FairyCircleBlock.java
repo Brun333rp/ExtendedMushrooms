@@ -10,20 +10,16 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.MushroomBlock;
 import net.minecraft.block.material.Material;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
@@ -139,8 +135,10 @@ public class FairyCircleBlock extends AirBlock {
         boolean[] clockwises = new boolean[]{true, false};
         for (Direction direction : FAIRY_CIRCLE_DIRECTIONS) {
             for (boolean clockwise : clockwises) {
-                FairyCircle fairyCircle = new FairyCircle(FairyCircle.getFairyCirclePositions(new LinkedList<>(), direction, clockwise, mutablePos.setPos(pos)));
-                fairyCircle.placeBlocksIfValid(world);
+                try {
+                    FairyCircle fairyCircle = new FairyCircle(world, direction, clockwise, mutablePos.setPos(pos));
+                    fairyCircle.placeBlocks(world);
+                } catch (FairyCircle.CannotFormFairyCircleException ignore) {}
             }
         }
     }
@@ -148,6 +146,9 @@ public class FairyCircleBlock extends AirBlock {
 
     private static class FairyCircle {
 
+        static class CannotFormFairyCircleException extends Exception {}
+
+        /** a list of 12 block positions (first 8 border blocks [B], following 4 center blocks [C]) */
         LinkedList<BlockPos> circlePositions;
 
         /**
@@ -157,11 +158,12 @@ public class FairyCircleBlock extends AirBlock {
          * B C C B
          * B C C B
          * # B B #
-         *
-         * @param circlePositions Must be a list of 12 block positions (first 8 border blocks [B], following 4 center blocks [C])
          */
-        FairyCircle(LinkedList<BlockPos> circlePositions) {
-            this.circlePositions = circlePositions;
+        FairyCircle(IWorld world, Direction direction, boolean clockwise, BlockPos.Mutable mutablePos) throws CannotFormFairyCircleException {
+            this.circlePositions = getFairyCirclePositions(world, new LinkedList<>(), direction, clockwise, mutablePos);
+            if (this.circlePositions == null || circlePositions.size() != 12) {
+                throw new CannotFormFairyCircleException();
+            }
         }
 
         /**
@@ -170,12 +172,22 @@ public class FairyCircleBlock extends AirBlock {
          * @param direction - initial direction where it should look for the next block
          * @param clockwise - boolean to say if the circle should be checked clockwise or counter clockwise
          * @param mutablePos - a mutable block position, where the position of the initial block is set
-         * @return list of all 12 important positions of the circle (parameter positions)
+         * @return list of all 12 important positions of the circle (parameter positions) - returns null, when circle cannot be placed
          */
-        private static LinkedList<BlockPos> getFairyCirclePositions(LinkedList<BlockPos> positions, Direction direction, boolean clockwise, BlockPos.Mutable mutablePos) {
+        private static LinkedList<BlockPos> getFairyCirclePositions(IWorld world, LinkedList<BlockPos> positions, Direction direction, boolean clockwise, BlockPos.Mutable mutablePos) {
             Direction rotatedDirection = (clockwise) ? direction.rotateY() : direction.rotateYCCW();
-
             Direction newDirection = direction;
+
+            //check if circle has mushrooms
+            if (positions.size() < 8 && !(world.getBlockState(mutablePos).getBlock() instanceof MushroomBlock)) {
+                return null;
+            } else
+            //check if center is filled with air blocks and below must be a solid block
+            if (positions.size() >= 8 && (world.getBlockState(mutablePos).getBlock() != Blocks.AIR ||
+                        !world.getBlockState(mutablePos.down()).isSolid())) {
+                return null;
+            }
+
             //put position in list
             positions.add(new BlockPos(mutablePos));
 
@@ -196,30 +208,10 @@ public class FairyCircleBlock extends AirBlock {
             }
 
             if (positions.size() < 12) {
-                return getFairyCirclePositions(positions, newDirection, clockwise, mutablePos);
+                return getFairyCirclePositions(world, positions, newDirection, clockwise, mutablePos);
             } else {
                 return positions;
             }
-        }
-
-        private boolean isValid(IWorld world) {
-            if (circlePositions.size() != 12) {
-                return false;
-            }
-            //check if circle has mushrooms
-            for (int position = 0; position < 8; position++) {
-                if (!(world.getBlockState(circlePositions.get(position)).getBlock() instanceof MushroomBlock)) {
-                    return false;
-                }
-            }
-            //check if center is filled with air blocks and below must be a solid block
-            for (int position = 8; position < 12; position++) {
-                if (world.getBlockState(circlePositions.get(position)).getBlock() != Blocks.AIR ||
-                        !world.getBlockState(circlePositions.get(position).down()).isSolid()) {
-                    return false;
-                }
-            }
-            return true;
         }
 
         private List<BlockPos> getSortedCenterPositions() {
@@ -234,14 +226,12 @@ public class FairyCircleBlock extends AirBlock {
             return list;
         }
 
-        void placeBlocksIfValid(IWorld world) {
-            if (this.isValid(world)) {
-                List<BlockPos> list = getSortedCenterPositions();
-                for (int i = 0; i < 4; i++) {
-                    BlockState state = ExtendedMushroomsBlocks.FAIRY_CIRCLE.getDefaultState().with(FairyCircleBlock.FACING, FAIRY_CIRCLE_DIRECTIONS[i]);
-                    //2 - no block updates to avoid to calling neighborChanged while placing
-                    world.setBlockState(list.get(i), state, 2);
-                }
+        void placeBlocks(IWorld world) {
+            List<BlockPos> list = getSortedCenterPositions();
+            for (int i = 0; i < 4; i++) {
+                BlockState state = ExtendedMushroomsBlocks.FAIRY_CIRCLE.getDefaultState().with(FairyCircleBlock.FACING, FAIRY_CIRCLE_DIRECTIONS[i]);
+                //2 - no block updates to avoid to calling neighborChanged while placing
+                world.setBlockState(list.get(i), state, 2);
             }
         }
 
