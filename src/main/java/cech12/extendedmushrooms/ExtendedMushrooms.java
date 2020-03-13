@@ -1,5 +1,7 @@
 package cech12.extendedmushrooms;
 
+import cech12.extendedmushrooms.api.block.ExtendedMushroomsBlocks;
+import cech12.extendedmushrooms.block.FairyCircleBlock;
 import cech12.extendedmushrooms.config.Config;
 import cech12.extendedmushrooms.entity.passive.MushroomSheepEntity;
 import cech12.extendedmushrooms.init.ModBlocks;
@@ -8,14 +10,19 @@ import cech12.extendedmushrooms.init.ModFeatures;
 import cech12.extendedmushrooms.init.ModVanillaCompat;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.MushroomBlock;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.DyeItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IWorld;
 import net.minecraftforge.common.ToolType;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -90,6 +97,28 @@ public class ExtendedMushrooms {
         if (entity instanceof MushroomSheepEntity && itemStack.getItem() instanceof DyeItem) {
             event.setCanceled(true);
             event.setCancellationResult(ActionResultType.FAIL);
+        }
+    }
+
+    /**
+     * Add Fairy Circle generation to all mushroom blocks
+     */
+    @SubscribeEvent
+    public static void onNeighbourChanged(BlockEvent.NeighborNotifyEvent event) {
+        IWorld world = event.getWorld();
+        BlockPos blockPos = event.getPos();
+        BlockState blockState = world.getBlockState(blockPos);
+        if (blockState.getBlock() != ExtendedMushroomsBlocks.FAIRY_CIRCLE) {
+            for (Direction direction : event.getNotifiedSides()) {
+                BlockPos neighbourPos = blockPos.offset(direction);
+                if (world.getBlockState(neighbourPos).getBlock() instanceof MushroomBlock) {
+                    //neighbour is mushroom?
+                    FairyCircleBlock.fairyCirclePlaceCheck(world, neighbourPos);
+                } else if (world.getBlockState(neighbourPos.up()).getBlock() instanceof MushroomBlock) {
+                    //for ground blocks - block above neighbour is mushroom?
+                    FairyCircleBlock.fairyCirclePlaceCheck(world, neighbourPos.up());
+                }
+            }
         }
     }
 

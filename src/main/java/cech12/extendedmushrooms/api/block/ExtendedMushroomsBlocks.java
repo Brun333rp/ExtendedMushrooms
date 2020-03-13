@@ -4,6 +4,8 @@ import net.minecraft.block.Block;
 
 public class ExtendedMushroomsBlocks {
 
+    public static Block FAIRY_CIRCLE;
+
     public static Block INFESTED_GRASS;
 
     public static Block MUSHROOM_BUTTON;
