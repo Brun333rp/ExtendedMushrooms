@@ -122,6 +122,7 @@ public final class ModBlocks {
         //RenderTypeLookup.setRenderLayer(MUSHROOM_DOOR, RenderType.getCutout()); //unfortunately buggy - so, texture without transparency
         //RenderTypeLookup.setRenderLayer(MUSHROOM_TRAPDOOR, RenderType.getCutout()); //unfortunately buggy - so, texture without transparency
 
+        RenderTypeLookup.setRenderLayer(FAIRY_CIRCLE, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(INFESTED_GRASS, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(GLOWSHROOM, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(GLOWSHROOM_POTTED, RenderType.getCutout());
