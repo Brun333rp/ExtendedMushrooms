@@ -10,6 +10,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.MushroomBlock;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.Entity;
+import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.state.DirectionProperty;
@@ -36,7 +38,7 @@ public class FairyCircleBlock extends AirBlock {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-    private static Direction[] FAIRY_CIRCLE_DIRECTIONS = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
+    public static final Direction[] FAIRY_CIRCLE_DIRECTIONS = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
 
     public FairyCircleBlock() {
         super(Block.Properties.create(Material.AIR).doesNotBlockMovement().noDrops());
@@ -74,6 +76,27 @@ public class FairyCircleBlock extends AirBlock {
     @Override
     public TileEntity createTileEntity(BlockState state, IBlockReader world) {
         return new FairyCircleTileEntity();
+    }
+
+    public void onEntityCollision(BlockState blockState, World world, BlockPos blockPos, Entity entity) {
+        if (!world.isRemote) {
+            TileEntity tileentity = world.getTileEntity(blockPos);
+            if (tileentity instanceof FairyCircleTileEntity) {
+                ((FairyCircleTileEntity) tileentity).onEntityCollision(world, entity);
+            }
+        }
+    }
+
+    public void onReplaced(BlockState state, @Nonnull World worldIn, @Nonnull BlockPos pos, BlockState newState, boolean isMoving) {
+        if (state.getBlock() != newState.getBlock()) {
+            TileEntity tileentity = worldIn.getTileEntity(pos);
+            if (tileentity instanceof FairyCircleTileEntity) {
+                InventoryHelper.dropInventoryItems(worldIn, pos, (FairyCircleTileEntity)tileentity);
+                worldIn.updateComparatorOutputLevel(pos, this);
+            }
+
+            super.onReplaced(state, worldIn, pos, newState, isMoving);
+        }
     }
 
     /**
