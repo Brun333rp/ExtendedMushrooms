@@ -9,7 +9,6 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
@@ -18,15 +17,16 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
-import java.util.Iterator;
 
 public class FairyCircleTileEntity extends TileEntity implements IInventory, ITickableTileEntity {
+
+    private static final int INVENTORY_SIZE = 32;
 
     private boolean hasMaster;
     private boolean isMaster;
     private BlockPos masterPos;
 
-    private NonNullList<ItemStack> items = NonNullList.create();
+    private NonNullList<ItemStack> items = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);
     private int recipeTime;
     private int recipeTimeTotal;
 
@@ -101,12 +101,8 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
         this.hasMaster = compound.getBoolean("HasMaster");
         this.isMaster = compound.getBoolean("IsMaster");
         if (this.isMaster()) {
-            this.items = NonNullList.create();
-            //ItemStackHelper.loadAllItems needs a fixed size. so own implementation
-            ListNBT nbtList = compound.getList("Items", 10);
-            for(int i = 0; i < nbtList.size(); ++i) {
-                this.items.add(ItemStack.read(nbtList.getCompound(i)));
-            }
+            this.items = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);
+            ItemStackHelper.loadAllItems(compound, this.items);
             this.recipeTime = compound.getInt("RecipeTime");
             this.recipeTimeTotal = compound.getInt("RecipeTimeTotal");
         }
@@ -142,19 +138,22 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
             if (entity instanceof ItemEntity) {
                 //Collect Item Entities.
                 ItemEntity itemEntity = (ItemEntity) entity;
-                this.items.add(itemEntity.getItem());
-                itemEntity.remove();
+                ItemStack remainingStack = this.addItemStack(itemEntity.getItem());
+                if (remainingStack == ItemStack.EMPTY) {
+                    //when fully added, remove entity
+                    itemEntity.remove();
+                } else {
+                    //when not or partly added, set new stack and throw it back
+                    itemEntity.setItem(remainingStack);
+                    //itemEntity.setMotion(itemEntity.getMotion().inverse()); // TODO does not work very wel
+                }
             } else if (entity instanceof PlayerEntity) {
                 //Give entering player all stored items.
-                if (this.items.size() > 0) {
-                    PlayerEntity playerEntity = (PlayerEntity) entity;
-                    Iterator<ItemStack> iterator = this.items.iterator();
-                    while (iterator.hasNext()) {
-                        ItemStack stack = iterator.next();
-                        if (!playerEntity.inventory.addItemStackToInventory(stack)) {
-                            break;
-                        }
-                        iterator.remove();
+                PlayerEntity playerEntity = (PlayerEntity) entity;
+                for (int i = 0; i < this.getSizeInventory(); i++) {
+                    ItemStack stack = this.getStackInSlot(i);
+                    if (playerEntity.inventory.addItemStackToInventory(stack)) {
+                        this.decrStackSize(i, stack.getCount());
                     }
                 }
             }
@@ -168,7 +167,28 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
         }
     }
 
+    /**
+     *
+     * @param stack ItemStack which should be added.
+     * @return The remaining ItemStack, which cannot be added or ItemStack.EMPTY when fully added
+     */
+    public ItemStack addItemStack(ItemStack stack) {
+        FairyCircleTileEntity master = this.getMaster();
+        if (stack != null && master != null && !stack.isEmpty()) {
+            //each slot has only a stack size of 1
+            for (int i = 0; i < master.items.size(); i++) {
+                if (master.items.get(i).isEmpty()) {
+                    master.setInventorySlotContents(i, stack.split(master.getInventoryStackLimit()));
+                    if (stack.isEmpty()) {
+                        break;
+                    }
+                }
+            }
+        }
+        return stack;
+    }
 
+    @Override
     public int getSizeInventory() {
         FairyCircleTileEntity master = this.getMaster();
         if (master != null) {
@@ -177,10 +197,20 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
         return 0;
     }
 
+    @Override
+    public int getInventoryStackLimit() {
+        return 1;
+    }
+
+    @Override
     public boolean isEmpty() {
         FairyCircleTileEntity master = this.getMaster();
         if (master != null) {
-            return master.items.size() == 0;
+            for (ItemStack itemstack : master.items) {
+                if (!itemstack.isEmpty()) {
+                    return false;
+                }
+            }
         }
         return true;
     }
@@ -189,7 +219,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
     @Nonnull
     public ItemStack getStackInSlot(int slot) {
         FairyCircleTileEntity master = this.getMaster();
-        if (master != null && slot < master.items.size()) {
+        if (master != null && slot >= 0 && slot < master.items.size()) {
             return master.items.get(slot);
         }
         return ItemStack.EMPTY;
@@ -200,13 +230,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
     public ItemStack decrStackSize(int slot, int count) {
         FairyCircleTileEntity master = this.getMaster();
         if (master != null && count > 0 && slot >= 0 && slot < master.items.size()) {
-            ItemStack stack = master.items.get(slot);
-            ItemStack splitStack = stack.split(count);
-            stack.setCount(Math.max(0, stack.getCount() - count));
-            if (stack.isEmpty()) {
-                master.items.remove(stack);
-            }
-            return splitStack;
+            return ItemStackHelper.getAndSplit(master.items, slot, count);
         }
         return ItemStack.EMPTY;
     }
@@ -216,7 +240,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
     public ItemStack removeStackFromSlot(int slot) {
         FairyCircleTileEntity master = this.getMaster();
         if (master != null && slot < master.items.size()) {
-            return master.items.remove(slot);
+            return ItemStackHelper.getAndRemove(master.items, slot);
         }
         return ItemStack.EMPTY;
     }
@@ -224,12 +248,8 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
     @Override
     public void setInventorySlotContents(int slot, @Nonnull ItemStack itemStack) {
         FairyCircleTileEntity master = this.getMaster();
-        if (master != null) {
-            if (slot < master.items.size()) {
-                master.items.set(slot, itemStack);
-            } else {
-                master.items.add(itemStack);
-            }
+        if (master != null && slot >= 0 && slot < master.items.size()) {
+            master.items.set(slot, itemStack);
         }
     }
 
