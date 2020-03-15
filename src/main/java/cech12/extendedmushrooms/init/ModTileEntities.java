@@ -2,12 +2,16 @@ package cech12.extendedmushrooms.init;
 
 import cech12.extendedmushrooms.ExtendedMushrooms;
 import cech12.extendedmushrooms.api.block.ExtendedMushroomsBlocks;
+import cech12.extendedmushrooms.client.renderer.tileentity.FairyCircleTileEntityRenderer;
 import cech12.extendedmushrooms.tileentity.FairyCircleTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.function.Supplier;
@@ -28,5 +32,14 @@ public class ModTileEntities {
         registryEvent.getRegistry().register(tileEntityType);
         return tileEntityType;
     }
+
+    /**
+     * Setup renderers for entities. Is called at mod initialisation.
+     */
+    @OnlyIn(Dist.CLIENT)
+    public static void setupRenderers() {
+        ClientRegistry.bindTileEntityRenderer((TileEntityType<FairyCircleTileEntity>) FAIRY_CIRCLE, FairyCircleTileEntityRenderer::new);
+    }
+
 
 }

@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 
 public class FairyCircleTileEntity extends TileEntity implements IInventory, ITickableTileEntity {
 
+    public static final Vec3d CENTER_TRANSLATION_VECTOR = new Vec3d(1, 0, 1);
     private static final int INVENTORY_SIZE = 32;
 
     private static final int EFFECT_EVENT = 0;
@@ -77,7 +78,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
      * Should only be called by master!
      */
     public Vec3d getCenter() {
-        return new Vec3d(this.getPos()).add(1, 0 ,1);
+        return new Vec3d(this.getPos()).add(CENTER_TRANSLATION_VECTOR);
     }
 
     public boolean hasMaster() {
