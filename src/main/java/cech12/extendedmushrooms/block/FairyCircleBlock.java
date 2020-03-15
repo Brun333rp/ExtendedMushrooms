@@ -79,11 +79,9 @@ public class FairyCircleBlock extends AirBlock {
     }
 
     public void onEntityCollision(BlockState blockState, World world, BlockPos blockPos, Entity entity) {
-        if (!world.isRemote) {
-            TileEntity tileentity = world.getTileEntity(blockPos);
-            if (tileentity instanceof FairyCircleTileEntity) {
-                ((FairyCircleTileEntity) tileentity).onEntityCollision(world, entity);
-            }
+        TileEntity tileentity = world.getTileEntity(blockPos);
+        if (tileentity instanceof FairyCircleTileEntity) {
+            ((FairyCircleTileEntity) tileentity).onEntityCollision(world, entity);
         }
     }
 
@@ -106,6 +104,13 @@ public class FairyCircleBlock extends AirBlock {
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
         worldIn.addParticle(ParticleTypes.MYCELIUM, -0.5 + pos.getX() + rand.nextFloat() * 2, pos.getY() + 0.1F, -0.5 + pos.getZ() + rand.nextFloat() * 2, 0.0D, 0.0D, 0.0D);
+    }
+
+    @Override
+    public boolean eventReceived(BlockState state, World world, BlockPos pos, int id, int param) {
+        super.eventReceived(state, world, pos, id, param);
+        TileEntity tileentity = world.getTileEntity(pos);
+        return tileentity != null && tileentity.receiveClientEvent(id, param);
     }
 
     @Override
