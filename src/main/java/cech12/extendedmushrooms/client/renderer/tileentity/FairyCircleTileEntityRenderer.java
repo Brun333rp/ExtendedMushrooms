@@ -1,5 +1,6 @@
 package cech12.extendedmushrooms.client.renderer.tileentity;
 
+import cech12.extendedmushrooms.client.ClientTickObserver;
 import cech12.extendedmushrooms.tileentity.FairyCircleTileEntity;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
@@ -37,7 +38,7 @@ public class FairyCircleTileEntityRenderer extends TileEntityRenderer<FairyCircl
                 }
             }
 
-            //double time = ClientTickHandler.ticksInGame + partticks;
+            double time = ClientTickObserver.ticksSinceStart + partticks;
 
             float anglePerItem = 360F / itemCount;
             Minecraft mc = Minecraft.getInstance();
@@ -47,14 +48,13 @@ public class FairyCircleTileEntityRenderer extends TileEntityRenderer<FairyCircl
                 matrixStack.push();
                 if (itemCount > 1) {
                     //deposit items in a circle, when more than one items are in inventory
-                    matrixStack.rotate(new Quaternion(yAxis, (float) Math.toRadians(anglePerItem * i), false)); // + (float) time
+                    matrixStack.rotate(new Quaternion(yAxis, (float) Math.toRadians(anglePerItem * i), false));
                     matrixStack.translate(0.75, 0, 0);
-                    //rotate flat items by 90 degrees
-                    matrixStack.rotate(new Quaternion(yAxis, (float) Math.toRadians(90), false));
                 }
-                //TODO add some motion
-                //GlStateManager.rotatef(90F, 0F, 1F, 0F);
-                //matrixStack.translate(0, 0.075 * Math.sin((time + i * 10) / 5.0), 0);
+                //add some (slow) motion
+                matrixStack.rotate(new Quaternion(yAxis, (float) Math.toRadians((time / 3 + i * 10) % 360), false));
+                matrixStack.translate(0, Math.sin((time + i * 10) / 10.0) * 0.01 + 0.05, 0);
+                //render item
                 ItemStack stack = fairyCircle.getStackInSlot(i);
                 if(!stack.isEmpty()) {
                     mc.getItemRenderer().renderItem(stack, ItemCameraTransforms.TransformType.GROUND, p1, p2, matrixStack, iRenderTypeBuffer);

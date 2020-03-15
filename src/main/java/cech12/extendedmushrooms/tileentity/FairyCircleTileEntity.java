@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 public class FairyCircleTileEntity extends TileEntity implements IInventory, ITickableTileEntity {
 
     public static final Vec3d CENTER_TRANSLATION_VECTOR = new Vec3d(1, 0, 1);
-    private static final int INVENTORY_SIZE = 32;
+    private static final int INVENTORY_SIZE = 16;
 
     private static final int EFFECT_EVENT = 0;
 
@@ -255,7 +255,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
             //each slot has only a stack size of 1
             for (int i = 0; i < master.items.size(); i++) {
                 if (master.items.get(i).isEmpty()) {
-                    master.setInventorySlotContents(i, stack.split(master.getInventoryStackLimit()));
+                    master.setInventorySlotContents(i, stack.split(1));
                     changed = true;
                     if (stack.isEmpty()) {
                         break;
