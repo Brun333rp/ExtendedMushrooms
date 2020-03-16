@@ -1,0 +1,13 @@
+{
+  "type": "extendedmushrooms:fairy_circle_recipe",
+  "mode": "normal",
+  "ingredients": [
+    {
+      "item": "extendedmushrooms:glowshroom"
+    }
+  ],
+  "recipetime": 200,
+  "result": {
+    "mode": "fairy"
+  }
+}

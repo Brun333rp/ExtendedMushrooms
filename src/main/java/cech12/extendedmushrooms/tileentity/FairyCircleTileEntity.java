@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 public class FairyCircleTileEntity extends TileEntity implements IInventory, ITickableTileEntity {
 
     public static final Vec3d CENTER_TRANSLATION_VECTOR = new Vec3d(1, 0, 1);
-    private static final int INVENTORY_SIZE = 16;
+    public static final int INVENTORY_SIZE = 16;
 
     private static final int EFFECT_EVENT = 0;
 
@@ -186,22 +186,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
             }
         } else {
             if (entity instanceof ItemEntity) {
-                //Collect Item Entities.
-                ItemEntity itemEntity = (ItemEntity) entity;
-                ItemStack remainingStack = this.addItemStack(itemEntity.getItem());
-                if (remainingStack == ItemStack.EMPTY) {
-                    //when fully added, remove entity
-                    itemEntity.remove();
-                } else {
-                    //when not or partly added, set new stack
-                    itemEntity.setItem(remainingStack);
-                    //itemEntity shouldn't stay inside of FairyCircleTileEntity (performance issue)
-                    //so, push remaining stack to border.
-                    Vec3d centerToStack = itemEntity.getPositionVec().subtract(this.getCenter());
-                    double scaleFactor = (1.8 - centerToStack.length()) * 0.08; //1.8 is sqrt(3) | 0.08 is speed
-                    Vec3d calculatedMotion = new Vec3d(centerToStack.x, 0, centerToStack.z).normalize().scale(scaleFactor);
-                    itemEntity.setMotion(itemEntity.getMotion().add(calculatedMotion));
-                }
+                this.onItemEntityCollision((ItemEntity) entity);
             } else if (entity instanceof PlayerEntity) {
                 //Give entering player all stored items.
                 PlayerEntity playerEntity = (PlayerEntity) entity;
@@ -214,6 +199,28 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
             }
         }
     }
+
+    private void onItemEntityCollision(ItemEntity itemEntity) {
+        //Collect Item Entities.
+        ItemStack remainingStack = this.addItemStack(itemEntity.getItem());
+        if (remainingStack == ItemStack.EMPTY) {
+            //when fully added, remove entity
+            itemEntity.remove();
+        } else {
+            //when not or partly added, set new stack
+            itemEntity.setItem(remainingStack);
+            //itemEntity shouldn't stay inside of FairyCircleTileEntity (performance issue)
+            //so, push remaining stack to border.
+            Vec3d centerToStack = itemEntity.getPositionVec().subtract(this.getCenter());
+            double scaleFactor = (1.8 - centerToStack.length()) * 0.08; //1.8 is sqrt(3) | 0.08 is speed
+            Vec3d calculatedMotion = new Vec3d(centerToStack.x, 0, centerToStack.z).normalize().scale(scaleFactor);
+            itemEntity.setMotion(itemEntity.getMotion().add(calculatedMotion));
+        }
+        //TODO check recipes!
+        // Collection<IRecipe<?>> recipes = ExtendedMushrooms.getRecipes(ExtendedMushroomsRecipeTypes.FAIRY_CIRCLE, this.getWorld().getRecipeManager()).values();
+    }
+
+
 
     @Override
     public void tick() {
