@@ -2,8 +2,8 @@ package cech12.extendedmushrooms.init;
 
 import cech12.extendedmushrooms.ExtendedMushrooms;
 import cech12.extendedmushrooms.api.block.ExtendedMushroomsBlocks;
-import cech12.extendedmushrooms.client.renderer.tileentity.FairyCircleTileEntityRenderer;
-import cech12.extendedmushrooms.tileentity.FairyCircleTileEntity;
+import cech12.extendedmushrooms.client.renderer.tileentity.FairyRingTileEntityRenderer;
+import cech12.extendedmushrooms.tileentity.FairyRingTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityType;
@@ -23,7 +23,7 @@ public class ModTileEntities {
 
     @SubscribeEvent
     public static void registerTileEntities(RegistryEvent.Register<TileEntityType<?>> event) {
-        FAIRY_CIRCLE = register(FairyCircleTileEntity::new, "fairy_circle", ExtendedMushroomsBlocks.FAIRY_CIRCLE, event);
+        FAIRY_RING = register(FairyRingTileEntity::new, "fairy_ring", ExtendedMushroomsBlocks.FAIRY_RING, event);
     }
 
     private static <T extends TileEntity> TileEntityType<T> register(Supplier<T> supplier, String registryName, Block block, RegistryEvent.Register<TileEntityType<?>> registryEvent) {
@@ -38,7 +38,7 @@ public class ModTileEntities {
      */
     @OnlyIn(Dist.CLIENT)
     public static void setupRenderers() {
-        ClientRegistry.bindTileEntityRenderer((TileEntityType<FairyCircleTileEntity>) FAIRY_CIRCLE, FairyCircleTileEntityRenderer::new);
+        ClientRegistry.bindTileEntityRenderer((TileEntityType<FairyRingTileEntity>) FAIRY_RING, FairyRingTileEntityRenderer::new);
     }
 
 

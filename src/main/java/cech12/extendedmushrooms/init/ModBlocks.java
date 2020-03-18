@@ -53,7 +53,7 @@ public final class ModBlocks {
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
 
-        FAIRY_CIRCLE = registerBlock("fairy_circle", new FairyCircleBlock());
+        FAIRY_RING = registerBlock("fairy_ring", new FairyRingBlock());
 
         INFESTED_GRASS = registerBlock("infested_grass", ItemGroup.DECORATIONS, new InfestedGrassBlock(Block.Properties.create(Material.TALL_PLANTS).doesNotBlockMovement().hardnessAndResistance(0.0F).sound(SoundType.PLANT)));
 
@@ -122,7 +122,7 @@ public final class ModBlocks {
         //RenderTypeLookup.setRenderLayer(MUSHROOM_DOOR, RenderType.getCutout()); //unfortunately buggy - so, texture without transparency
         //RenderTypeLookup.setRenderLayer(MUSHROOM_TRAPDOOR, RenderType.getCutout()); //unfortunately buggy - so, texture without transparency
 
-        RenderTypeLookup.setRenderLayer(FAIRY_CIRCLE, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(FAIRY_RING, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(INFESTED_GRASS, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(GLOWSHROOM, RenderType.getCutout());
         RenderTypeLookup.setRenderLayer(GLOWSHROOM_POTTED, RenderType.getCutout());

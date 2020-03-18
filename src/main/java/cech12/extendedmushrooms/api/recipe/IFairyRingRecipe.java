@@ -8,7 +8,7 @@ import net.minecraft.util.ResourceLocation;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public interface IFairyCircleRecipe {
+public interface IFairyRingRecipe {
 
     @Nonnull
     ResourceLocation getId();
@@ -29,11 +29,11 @@ public interface IFairyCircleRecipe {
     int getRecipeTime();
 
     /**
-     * Returns the required FairyCircleMode.
-     * @return required FairyCircleMode
+     * Returns the required FairyRingMode.
+     * @return required FairyRingMode
      */
     @Nonnull
-    FairyCircleRecipeMode getRequiredMode();
+    FairyRingMode getRequiredMode();
 
     /**
      * Returns the resulting ItemStack.
@@ -44,12 +44,12 @@ public interface IFairyCircleRecipe {
     ItemStack getResultItemStack();
 
     /**
-     * Returns the resulting FairyCircleMode. Default implementation returns the required mode,
-     * that means the mode of fairy circle does not change.
-     * @return resulting mode of fairy circle
+     * Returns the resulting FairyRingMode. Default implementation returns the required mode,
+     * that means the mode of fairy ring does not change.
+     * @return resulting mode of fairy ring
      */
     @Nonnull
-    default FairyCircleRecipeMode getResultMode() {
+    default FairyRingMode getResultMode() {
         return this.getRequiredMode();
     }
 

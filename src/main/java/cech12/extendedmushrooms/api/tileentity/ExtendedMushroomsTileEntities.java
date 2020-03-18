@@ -4,6 +4,6 @@ import net.minecraft.tileentity.TileEntityType;
 
 public class ExtendedMushroomsTileEntities {
 
-    public static TileEntityType<?> FAIRY_CIRCLE;
+    public static TileEntityType<?> FAIRY_RING;
 
 }

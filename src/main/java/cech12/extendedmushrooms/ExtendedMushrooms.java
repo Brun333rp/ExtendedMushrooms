@@ -2,8 +2,8 @@ package cech12.extendedmushrooms;
 
 import cech12.extendedmushrooms.api.block.ExtendedMushroomsBlocks;
 import cech12.extendedmushrooms.api.recipe.ExtendedMushroomsRecipeTypes;
-import cech12.extendedmushrooms.api.recipe.FairyCircleRecipe;
-import cech12.extendedmushrooms.block.FairyCircleBlock;
+import cech12.extendedmushrooms.api.recipe.FairyRingRecipe;
+import cech12.extendedmushrooms.block.FairyRingBlock;
 import cech12.extendedmushrooms.config.Config;
 import cech12.extendedmushrooms.entity.passive.MushroomSheepEntity;
 import cech12.extendedmushrooms.init.ModBlocks;
@@ -75,11 +75,11 @@ public class ExtendedMushrooms {
 
     private void registerRecipeSerializers(RegistryEvent.Register<IRecipeSerializer<?>> event) {
         // let other mods register recipes
-        Registry.register(Registry.RECIPE_TYPE, new ResourceLocation(ExtendedMushroomsRecipeTypes.FAIRY_CIRCLE.toString()),
-                ExtendedMushroomsRecipeTypes.FAIRY_CIRCLE);
+        Registry.register(Registry.RECIPE_TYPE, new ResourceLocation(ExtendedMushroomsRecipeTypes.FAIRY_RING.toString()),
+                ExtendedMushroomsRecipeTypes.FAIRY_RING);
 
         // Register the recipe serializer.
-        event.getRegistry().register(FairyCircleRecipe.SERIALIZER);
+        event.getRegistry().register(FairyRingRecipe.SERIALIZER);
     }
 
     /**
@@ -127,22 +127,22 @@ public class ExtendedMushrooms {
     }
 
     /**
-     * Add Fairy Circle generation to all mushroom blocks
+     * Add Fairy Ring generation to all mushroom blocks
      */
     @SubscribeEvent
     public static void onNeighbourChanged(BlockEvent.NeighborNotifyEvent event) {
         IWorld world = event.getWorld();
         BlockPos blockPos = event.getPos();
         BlockState blockState = world.getBlockState(blockPos);
-        if (blockState.getBlock() != ExtendedMushroomsBlocks.FAIRY_CIRCLE) {
+        if (blockState.getBlock() != ExtendedMushroomsBlocks.FAIRY_RING) {
             for (Direction direction : event.getNotifiedSides()) {
                 BlockPos neighbourPos = blockPos.offset(direction);
                 if (world.getBlockState(neighbourPos).getBlock() instanceof MushroomBlock) {
                     //neighbour is mushroom?
-                    FairyCircleBlock.fairyCirclePlaceCheck(world, neighbourPos);
+                    FairyRingBlock.fairyRingPlaceCheck(world, neighbourPos);
                 } else if (world.getBlockState(neighbourPos.up()).getBlock() instanceof MushroomBlock) {
                     //for ground blocks - block above neighbour is mushroom?
-                    FairyCircleBlock.fairyCirclePlaceCheck(world, neighbourPos.up());
+                    FairyRingBlock.fairyRingPlaceCheck(world, neighbourPos.up());
                 }
             }
         }

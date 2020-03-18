@@ -4,6 +4,6 @@ import net.minecraft.item.crafting.IRecipeType;
 
 public class ExtendedMushroomsRecipeTypes {
 
-    public static IRecipeType<?> FAIRY_CIRCLE = new FairyCircleRecipeType();
+    public static IRecipeType<?> FAIRY_RING = new FairyRingRecipeType();
 
 }

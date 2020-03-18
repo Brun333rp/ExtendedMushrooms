@@ -127,10 +127,10 @@
         }
     ],
     "textures": {
-        "particle": "extendedmushrooms:block/fairy_circle_center",
-        "center": "extendedmushrooms:block/fairy_circle_center",
-        "side": "extendedmushrooms:block/fairy_circle_side",
-        "corner": "extendedmushrooms:block/fairy_circle_corner",
+        "particle": "extendedmushrooms:block/fairy_ring_center",
+        "center": "extendedmushrooms:block/fairy_ring_center",
+        "side": "extendedmushrooms:block/fairy_ring_side",
+        "corner": "extendedmushrooms:block/fairy_ring_corner",
         "mushroom1": "minecraft:block/brown_mushroom",
         "mushroom2": "minecraft:block/red_mushroom"
     }

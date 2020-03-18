@@ -2,7 +2,7 @@ package cech12.extendedmushrooms.tileentity;
 
 import cech12.extendedmushrooms.api.block.ExtendedMushroomsBlocks;
 import cech12.extendedmushrooms.api.tileentity.ExtendedMushroomsTileEntities;
-import cech12.extendedmushrooms.block.FairyCircleBlock;
+import cech12.extendedmushrooms.block.FairyRingBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.ItemEntity;
@@ -25,7 +25,7 @@ import net.minecraft.world.World;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class FairyCircleTileEntity extends TileEntity implements IInventory, ITickableTileEntity {
+public class FairyRingTileEntity extends TileEntity implements IInventory, ITickableTileEntity {
 
     public static final Vec3d CENTER_TRANSLATION_VECTOR = new Vec3d(1, 0, 1);
     public static final int INVENTORY_SIZE = 16;
@@ -40,8 +40,8 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
     private int recipeTime;
     private int recipeTimeTotal;
 
-    public FairyCircleTileEntity() {
-        super(ExtendedMushroomsTileEntities.FAIRY_CIRCLE);
+    public FairyRingTileEntity() {
+        super(ExtendedMushroomsTileEntities.FAIRY_RING);
         this.hasMaster = false;
         this.isMaster = false;
     }
@@ -60,10 +60,10 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
             World world = this.getWorld();
             BlockPos pos = this.getPos();
             if (world != null) {
-                for (Direction direction : FairyCircleBlock.FAIRY_CIRCLE_DIRECTIONS) {
+                for (Direction direction : FairyRingBlock.DIRECTIONS) {
                     TileEntity tileEntity = world.getTileEntity(pos.offset(direction));
-                    if (tileEntity instanceof FairyCircleTileEntity) {
-                        this.setMaster(((FairyCircleTileEntity) tileEntity).getMaster());
+                    if (tileEntity instanceof FairyRingTileEntity) {
+                        this.setMaster(((FairyRingTileEntity) tileEntity).getMaster());
                         break;
                     }
                 }
@@ -89,7 +89,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
         return isMaster;
     }
 
-    public void setMaster(FairyCircleTileEntity tileEntity) {
+    public void setMaster(FairyRingTileEntity tileEntity) {
         this.isMaster = false;
         this.hasMaster = true;
         this.masterPos = tileEntity.getPos();
@@ -103,14 +103,14 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
         this.sendUpdates();
     }
 
-    public FairyCircleTileEntity getMaster() {
+    public FairyRingTileEntity getMaster() {
         if (this.isMaster()) {
             return this;
         }
         if (this.hasMaster() && this.getWorld() != null) {
             TileEntity tileEntity = this.getWorld().getTileEntity(this.masterPos);
-            if (tileEntity instanceof FairyCircleTileEntity) {
-                return ((FairyCircleTileEntity) tileEntity);
+            if (tileEntity instanceof FairyRingTileEntity) {
+                return ((FairyRingTileEntity) tileEntity);
             }
         }
         return null;
@@ -180,7 +180,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
      */
     public void onEntityCollision(World world, Entity entity) {
         if (!this.isMaster()) {
-            FairyCircleTileEntity master = this.getMaster();
+            FairyRingTileEntity master = this.getMaster();
             if (master != null) {
                 master.onEntityCollision(world, entity);
             }
@@ -209,7 +209,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
         } else {
             //when not or partly added, set new stack
             itemEntity.setItem(remainingStack);
-            //itemEntity shouldn't stay inside of FairyCircleTileEntity (performance issue)
+            //itemEntity shouldn't stay inside of FairyRingTileEntity (performance issue)
             //so, push remaining stack to border.
             Vec3d centerToStack = itemEntity.getPositionVec().subtract(this.getCenter());
             double scaleFactor = (1.8 - centerToStack.length()) * 0.08; //1.8 is sqrt(3) | 0.08 is speed
@@ -217,7 +217,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
             itemEntity.setMotion(itemEntity.getMotion().add(calculatedMotion));
         }
         //TODO check recipes!
-        // Collection<IRecipe<?>> recipes = ExtendedMushrooms.getRecipes(ExtendedMushroomsRecipeTypes.FAIRY_CIRCLE, this.getWorld().getRecipeManager()).values();
+        // Collection<IRecipe<?>> recipes = ExtendedMushrooms.getRecipes(ExtendedMushroomsRecipeTypes.FAIRY_RING, this.getWorld().getRecipeManager()).values();
     }
 
 
@@ -226,7 +226,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
     public void tick() {
         if (this.isMaster() && this.getWorld() != null) {
             //some particles in center
-            this.getWorld().addBlockEvent(this.getPos(), ExtendedMushroomsBlocks.FAIRY_CIRCLE, EFFECT_EVENT, 0);
+            this.getWorld().addBlockEvent(this.getPos(), ExtendedMushroomsBlocks.FAIRY_RING, EFFECT_EVENT, 0);
             //TODO do cool stuff!
         }
     }
@@ -256,7 +256,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
      * @return The remaining ItemStack, which cannot be added or ItemStack.EMPTY when fully added
      */
     public ItemStack addItemStack(ItemStack stack) {
-        FairyCircleTileEntity master = this.getMaster();
+        FairyRingTileEntity master = this.getMaster();
         if (stack != null && master != null && !stack.isEmpty()) {
             boolean changed = false;
             //each slot has only a stack size of 1
@@ -278,7 +278,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
 
     @Override
     public int getSizeInventory() {
-        FairyCircleTileEntity master = this.getMaster();
+        FairyRingTileEntity master = this.getMaster();
         if (master != null) {
             return master.items.size();
         }
@@ -292,7 +292,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
 
     @Override
     public boolean isEmpty() {
-        FairyCircleTileEntity master = this.getMaster();
+        FairyRingTileEntity master = this.getMaster();
         if (master != null) {
             for (ItemStack itemstack : master.items) {
                 if (!itemstack.isEmpty()) {
@@ -306,7 +306,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
     @Override
     @Nonnull
     public ItemStack getStackInSlot(int slot) {
-        FairyCircleTileEntity master = this.getMaster();
+        FairyRingTileEntity master = this.getMaster();
         if (master != null && slot >= 0 && slot < master.items.size()) {
             return master.items.get(slot);
         }
@@ -316,7 +316,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
     @Override
     @Nonnull
     public ItemStack decrStackSize(int slot, int count) {
-        FairyCircleTileEntity master = this.getMaster();
+        FairyRingTileEntity master = this.getMaster();
         ItemStack stack = ItemStack.EMPTY;
         if (master != null && count > 0 && slot >= 0 && slot < master.items.size()) {
             stack = ItemStackHelper.getAndSplit(master.items, slot, count);
@@ -328,7 +328,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
     @Override
     @Nonnull
     public ItemStack removeStackFromSlot(int slot) {
-        FairyCircleTileEntity master = this.getMaster();
+        FairyRingTileEntity master = this.getMaster();
         if (master != null && slot < master.items.size()) {
             return ItemStackHelper.getAndRemove(master.items, slot);
         }
@@ -337,7 +337,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
 
     @Override
     public void setInventorySlotContents(int slot, @Nonnull ItemStack itemStack) {
-        FairyCircleTileEntity master = this.getMaster();
+        FairyRingTileEntity master = this.getMaster();
         if (master != null && slot >= 0 && slot < master.items.size()) {
             master.items.set(slot, itemStack);
         }
@@ -350,7 +350,7 @@ public class FairyCircleTileEntity extends TileEntity implements IInventory, ITi
 
     @Override
     public void clear() {
-        FairyCircleTileEntity master = this.getMaster();
+        FairyRingTileEntity master = this.getMaster();
         if (master != null) {
             master.items.clear();
         }

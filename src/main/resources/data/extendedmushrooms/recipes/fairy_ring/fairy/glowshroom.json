@@ -1,6 +1,6 @@
 {
-  "type": "extendedmushrooms:fairy_circle_recipe",
-  "mode": "normal",
+  "type": "extendedmushrooms:fairy_ring_recipe",
+  "mode": "fairy",
   "ingredients": [
     {
       "tag": "forge:mushrooms"

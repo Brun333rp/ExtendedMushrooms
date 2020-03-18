@@ -1,6 +1,6 @@
 package cech12.extendedmushrooms.api.recipe;
 
-public enum FairyCircleRecipeMode {
+public enum FairyRingMode {
 
     NORMAL(0, "normal"),
     FAIRY(1, "fairy"),
@@ -9,7 +9,7 @@ public enum FairyCircleRecipeMode {
     private int id;
     private String name;
 
-    FairyCircleRecipeMode(int id, String name) {
+    FairyRingMode(int id, String name) {
         this.id = id;
         this.name = name;
     }
@@ -22,8 +22,8 @@ public enum FairyCircleRecipeMode {
         return this.name;
     }
 
-    public static FairyCircleRecipeMode byName(String modeName) {
-        for (FairyCircleRecipeMode mode : FairyCircleRecipeMode.values()) {
+    public static FairyRingMode byName(String modeName) {
+        for (FairyRingMode mode : FairyRingMode.values()) {
             if (mode.name.equals(modeName)) {
                 return mode;
             }

@@ -1,7 +1,7 @@
 package cech12.extendedmushrooms.client.renderer.tileentity;
 
 import cech12.extendedmushrooms.client.ClientTickObserver;
-import cech12.extendedmushrooms.tileentity.FairyCircleTileEntity;
+import cech12.extendedmushrooms.tileentity.FairyRingTileEntity;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -16,24 +16,24 @@ import net.minecraft.util.math.Vec3d;
 
 import javax.annotation.Nonnull;
 
-public class FairyCircleTileEntityRenderer extends TileEntityRenderer<FairyCircleTileEntity> {
+public class FairyRingTileEntityRenderer extends TileEntityRenderer<FairyRingTileEntity> {
 
-    public FairyCircleTileEntityRenderer(TileEntityRendererDispatcher p_i226006_1_) {
+    public FairyRingTileEntityRenderer(TileEntityRendererDispatcher p_i226006_1_) {
         super(p_i226006_1_);
     }
 
     @Override
-    public void render(@Nonnull FairyCircleTileEntity fairyCircle, float partticks, @Nonnull MatrixStack matrixStack, @Nonnull IRenderTypeBuffer iRenderTypeBuffer, int p1, int p2) {
+    public void render(@Nonnull FairyRingTileEntity fairyRing, float partticks, @Nonnull MatrixStack matrixStack, @Nonnull IRenderTypeBuffer iRenderTypeBuffer, int p1, int p2) {
         //only render inventory of master
-        if (fairyCircle.isMaster()) {
+        if (fairyRing.isMaster()) {
             matrixStack.push();
-            //move to circle center
-            Vec3d centerTranslation = FairyCircleTileEntity.CENTER_TRANSLATION_VECTOR;
+            //move to ring center
+            Vec3d centerTranslation = FairyRingTileEntity.CENTER_TRANSLATION_VECTOR;
             matrixStack.translate(centerTranslation.x, centerTranslation.y, centerTranslation.z);
 
             int itemCount = 0;
-            for (int i = 0; i < fairyCircle.getSizeInventory(); i++) {
-                if (!fairyCircle.getStackInSlot(i).isEmpty()) {
+            for (int i = 0; i < fairyRing.getSizeInventory(); i++) {
+                if (!fairyRing.getStackInSlot(i).isEmpty()) {
                     itemCount++;
                 }
             }
@@ -44,7 +44,7 @@ public class FairyCircleTileEntityRenderer extends TileEntityRenderer<FairyCircl
             Minecraft mc = Minecraft.getInstance();
             mc.textureManager.bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
             Vector3f yAxis = new Vector3f(0, 1, 0);
-            for(int i = 0; i < fairyCircle.getSizeInventory(); i++) {
+            for(int i = 0; i < fairyRing.getSizeInventory(); i++) {
                 matrixStack.push();
                 if (itemCount > 1) {
                     //deposit items in a circle, when more than one items are in inventory
@@ -55,7 +55,7 @@ public class FairyCircleTileEntityRenderer extends TileEntityRenderer<FairyCircl
                 matrixStack.rotate(new Quaternion(yAxis, (float) Math.toRadians((time / 3 + i * 10) % 360), false));
                 matrixStack.translate(0, Math.sin((time + i * 10) / 10.0) * 0.01 + 0.05, 0);
                 //render item
-                ItemStack stack = fairyCircle.getStackInSlot(i);
+                ItemStack stack = fairyRing.getStackInSlot(i);
                 if(!stack.isEmpty()) {
                     mc.getItemRenderer().renderItem(stack, ItemCameraTransforms.TransformType.GROUND, p1, p2, matrixStack, iRenderTypeBuffer);
                 }

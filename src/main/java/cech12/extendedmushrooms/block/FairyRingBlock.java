@@ -2,7 +2,7 @@ package cech12.extendedmushrooms.block;
 
 
 import cech12.extendedmushrooms.api.block.ExtendedMushroomsBlocks;
-import cech12.extendedmushrooms.tileentity.FairyCircleTileEntity;
+import cech12.extendedmushrooms.tileentity.FairyRingTileEntity;
 import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
@@ -34,13 +34,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-public class FairyCircleBlock extends AirBlock {
+public class FairyRingBlock extends AirBlock {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-    public static final Direction[] FAIRY_CIRCLE_DIRECTIONS = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
+    public static final Direction[] DIRECTIONS = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
 
-    public FairyCircleBlock() {
+    public FairyRingBlock() {
         super(Block.Properties.create(Material.AIR).doesNotBlockMovement().noDrops());
         this.setDefaultState(this.stateContainer.getBaseState().with(FACING, Direction.NORTH));
     }
@@ -75,21 +75,21 @@ public class FairyCircleBlock extends AirBlock {
     @Nullable
     @Override
     public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-        return new FairyCircleTileEntity();
+        return new FairyRingTileEntity();
     }
 
     public void onEntityCollision(BlockState blockState, World world, BlockPos blockPos, Entity entity) {
         TileEntity tileentity = world.getTileEntity(blockPos);
-        if (tileentity instanceof FairyCircleTileEntity) {
-            ((FairyCircleTileEntity) tileentity).onEntityCollision(world, entity);
+        if (tileentity instanceof FairyRingTileEntity) {
+            ((FairyRingTileEntity) tileentity).onEntityCollision(world, entity);
         }
     }
 
     public void onReplaced(BlockState state, @Nonnull World worldIn, @Nonnull BlockPos pos, BlockState newState, boolean isMoving) {
         if (state.getBlock() != newState.getBlock()) {
             TileEntity tileentity = worldIn.getTileEntity(pos);
-            if (tileentity instanceof FairyCircleTileEntity) {
-                InventoryHelper.dropInventoryItems(worldIn, pos, (FairyCircleTileEntity)tileentity);
+            if (tileentity instanceof FairyRingTileEntity) {
+                InventoryHelper.dropInventoryItems(worldIn, pos, (FairyRingTileEntity)tileentity);
                 worldIn.updateComparatorOutputLevel(pos, this);
             }
 
@@ -115,14 +115,14 @@ public class FairyCircleBlock extends AirBlock {
 
     @Override
     public void neighborChanged(BlockState blockState, World world, BlockPos blockPos, Block block, BlockPos neighbourPos, boolean isMoving) {
-        //check for 2 mushrooms and 2 Fairy Circle blocks as neighbour. (diagonally the same)
+        //check for 2 mushrooms and 2 Fairy Ring blocks as neighbour. (diagonally the same)
         //check if block below is solid
         boolean mushroomSeen = false;
         int mushrooms = 0;
-        boolean fairyCircleBlockSeen = false;
-        int fairyCircleBlocks = 0;
+        boolean fairyRingBlockSeen = false;
+        int fairyRingBlocks = 0;
         boolean neighboursFound = false;
-        for (Direction direction : FAIRY_CIRCLE_DIRECTIONS) {
+        for (Direction direction : DIRECTIONS) {
             Block neighbourBlock = world.getBlockState(blockPos.offset(direction)).getBlock();
             if (neighbourBlock instanceof MushroomBlock) {
                 mushrooms++;
@@ -130,22 +130,22 @@ public class FairyCircleBlock extends AirBlock {
                     neighboursFound = true;
                 } else {
                     mushroomSeen = true;
-                    fairyCircleBlockSeen = false;
+                    fairyRingBlockSeen = false;
                 }
-            } else if (neighbourBlock == ExtendedMushroomsBlocks.FAIRY_CIRCLE) {
-                fairyCircleBlocks++;
-                if (fairyCircleBlockSeen) {
+            } else if (neighbourBlock == ExtendedMushroomsBlocks.FAIRY_RING) {
+                fairyRingBlocks++;
+                if (fairyRingBlockSeen) {
                     neighboursFound = true;
                 } else {
                     mushroomSeen = false;
-                    fairyCircleBlockSeen = true;
+                    fairyRingBlockSeen = true;
                 }
             } else {
                 break;
             }
         }
 
-        if (!neighboursFound || mushrooms != 2 || fairyCircleBlocks != 2 || !world.getBlockState(blockPos.down()).isSolid()) {
+        if (!neighboursFound || mushrooms != 2 || fairyRingBlocks != 2 || !world.getBlockState(blockPos.down()).isSolid()) {
             //remove me
             world.setBlockState(blockPos, Blocks.AIR.getDefaultState());
         }
@@ -155,58 +155,58 @@ public class FairyCircleBlock extends AirBlock {
 
 
     /**
-     * Check for built fairy circle and if true, place fairy circle blocks.
+     * Check for built fairy ring and if true, place fairy ring blocks.
      */
-    public static void fairyCirclePlaceCheck(IWorld world, BlockPos pos) {
-        //check for formed fairy circles
+    public static void fairyRingPlaceCheck(IWorld world, BlockPos pos) {
+        //check for formed fairy rings
         BlockPos.Mutable mutablePos = new BlockPos.Mutable();
         boolean[] clockwises = new boolean[]{true, false};
-        for (Direction direction : FAIRY_CIRCLE_DIRECTIONS) {
+        for (Direction direction : DIRECTIONS) {
             for (boolean clockwise : clockwises) {
                 try {
-                    FairyCircle fairyCircle = new FairyCircle(world, direction, clockwise, mutablePos.setPos(pos));
-                    fairyCircle.placeBlocks(world);
-                } catch (FairyCircle.CannotFormFairyCircleException ignore) {}
+                    FairyRing fairyRing = new FairyRing(world, direction, clockwise, mutablePos.setPos(pos));
+                    fairyRing.placeBlocks(world);
+                } catch (FairyRing.CannotFormFairyRingException ignore) {}
             }
         }
     }
 
 
-    private static class FairyCircle {
+    private static class FairyRing {
 
-        static class CannotFormFairyCircleException extends Exception {}
+        static class CannotFormFairyRingException extends Exception {}
 
         /** a list of 12 block positions (first 8 border blocks [B], following 4 center blocks [C]) */
-        LinkedList<BlockPos> circlePositions;
+        LinkedList<BlockPos> ringPositions;
 
         /**
-         * Construct a Fairy Circle with a list of 12 block positions.
+         * Construct a Fairy Ring with a list of 12 block positions.
          *
          * # B B #
          * B C C B
          * B C C B
          * # B B #
          */
-        FairyCircle(IWorld world, Direction direction, boolean clockwise, BlockPos.Mutable mutablePos) throws CannotFormFairyCircleException {
-            this.circlePositions = getFairyCirclePositions(world, new LinkedList<>(), direction, clockwise, mutablePos);
-            if (this.circlePositions == null || circlePositions.size() != 12) {
-                throw new CannotFormFairyCircleException();
+        FairyRing(IWorld world, Direction direction, boolean clockwise, BlockPos.Mutable mutablePos) throws CannotFormFairyRingException {
+            this.ringPositions = getFairyRingPositions(world, new LinkedList<>(), direction, clockwise, mutablePos);
+            if (this.ringPositions == null || ringPositions.size() != 12) {
+                throw new CannotFormFairyRingException();
             }
         }
 
         /**
-         * Recursive method to get all important positions of a fairy circle.
+         * Recursive method to get all important positions of a fairy ring.
          * @param positions - empty linked list which is filled with all positions
          * @param direction - initial direction where it should look for the next block
-         * @param clockwise - boolean to say if the circle should be checked clockwise or counter clockwise
+         * @param clockwise - boolean to say if the ring should be checked clockwise or counter clockwise
          * @param mutablePos - a mutable block position, where the position of the initial block is set
-         * @return list of all 12 important positions of the circle (parameter positions) - returns null, when circle cannot be placed
+         * @return list of all 12 important positions of the ring (parameter positions) - returns null, when ring cannot be placed
          */
-        private static LinkedList<BlockPos> getFairyCirclePositions(IWorld world, LinkedList<BlockPos> positions, Direction direction, boolean clockwise, BlockPos.Mutable mutablePos) {
+        private static LinkedList<BlockPos> getFairyRingPositions(IWorld world, LinkedList<BlockPos> positions, Direction direction, boolean clockwise, BlockPos.Mutable mutablePos) {
             Direction rotatedDirection = (clockwise) ? direction.rotateY() : direction.rotateYCCW();
             Direction newDirection = direction;
 
-            //check if circle has mushrooms
+            //check if ring has mushrooms
             if (positions.size() < 8 && !(world.getBlockState(mutablePos).getBlock() instanceof MushroomBlock)) {
                 return null;
             } else
@@ -236,14 +236,14 @@ public class FairyCircleBlock extends AirBlock {
             }
 
             if (positions.size() < 12) {
-                return getFairyCirclePositions(world, positions, newDirection, clockwise, mutablePos);
+                return getFairyRingPositions(world, positions, newDirection, clockwise, mutablePos);
             } else {
                 return positions;
             }
         }
 
         private List<BlockPos> getSortedCenterPositions() {
-            List<BlockPos> list = this.circlePositions.subList(8, 12);
+            List<BlockPos> list = this.ringPositions.subList(8, 12);
             list.sort((o1, o2) -> {
                 int result = o1.getX() - o2.getX();
                 if (result == 0) {
@@ -257,7 +257,7 @@ public class FairyCircleBlock extends AirBlock {
         void placeBlocks(IWorld world) {
             List<BlockPos> list = getSortedCenterPositions();
             for (int i = 0; i < 4; i++) {
-                BlockState state = ExtendedMushroomsBlocks.FAIRY_CIRCLE.getDefaultState().with(FairyCircleBlock.FACING, FAIRY_CIRCLE_DIRECTIONS[i]);
+                BlockState state = ExtendedMushroomsBlocks.FAIRY_RING.getDefaultState().with(FairyRingBlock.FACING, DIRECTIONS[i]);
                 //2 - no block updates to avoid to calling neighborChanged while placing
                 world.setBlockState(list.get(i), state, 2);
             }
