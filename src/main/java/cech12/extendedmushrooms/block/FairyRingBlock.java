@@ -102,7 +102,6 @@ public class FairyRingBlock extends AirBlock {
      */
     @OnlyIn(Dist.CLIENT)
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
-        super.animateTick(stateIn, worldIn, pos, rand);
         TileEntity tileentity = worldIn.getTileEntity(pos);
         if (tileentity instanceof FairyRingTileEntity) {
             ((FairyRingTileEntity) tileentity).animateTick(stateIn, worldIn, pos, rand);

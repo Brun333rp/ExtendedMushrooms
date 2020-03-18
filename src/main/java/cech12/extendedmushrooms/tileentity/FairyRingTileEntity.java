@@ -6,6 +6,7 @@ import cech12.extendedmushrooms.api.recipe.FairyRingMode;
 import cech12.extendedmushrooms.api.recipe.FairyRingRecipe;
 import cech12.extendedmushrooms.api.tileentity.ExtendedMushroomsTileEntities;
 import cech12.extendedmushrooms.block.FairyRingBlock;
+import cech12.extendedmushrooms.init.ModParticles;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.ItemEntity;
@@ -361,13 +362,43 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
      */
     @OnlyIn(Dist.CLIENT)
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
-        worldIn.addParticle(ParticleTypes.MYCELIUM, -0.5 + pos.getX() + rand.nextFloat() * 2, pos.getY() + 0.1F, -0.5 + pos.getZ() + rand.nextFloat() * 2, 0.0D, 0.0D, 0.0D);
         if (this.isMaster()) {
-            if (this.recipeTime < this.recipeTimeTotal) {
-                Vec3d center = this.getCenter();
-                //TODO better particles
-                worldIn.addParticle(ParticleTypes.MYCELIUM, center.x, center.y, center.z, 0.0D, 0.0D, 0.0D);
-                worldIn.addParticle(ParticleTypes.MYCELIUM, center.x, center.y, center.z, 0.0D, 0.0D, 0.0D);
+            Vec3d center = this.getCenter();
+            boolean runningRecipe = this.recipeTime < this.recipeTimeTotal;
+            if (this.mode == FairyRingMode.NORMAL && !runningRecipe) {
+                //normal mode without recipe process: some mycelium particles on ground
+                for (int i = 0; i < 4; i++) {
+                    worldIn.addParticle(ParticleTypes.MYCELIUM, -1.5 + center.x + rand.nextFloat() * 3, center.y + 0.1F, -1.5 + center.z + rand.nextFloat() * 3, 0, 0, 0);
+                }
+            } else {
+                //normal mode with recipe process or fairy/witch mode: white mycelium particles on ground
+                for (int i = 0; i < 4; i++) {
+                    worldIn.addParticle(ModParticles.FAIRY_RING, -1.5 + center.x + rand.nextFloat() * 3, center.y, -1.5 + center.z + rand.nextFloat() * 3, (rand.nextDouble() - 0.5) * 0.001, 0.0005, (rand.nextDouble() - 0.5) * 0.001);
+                }
+            }
+
+            if (this.mode == FairyRingMode.NORMAL && runningRecipe) {
+                //normal mode with recipe process: in center some sprinkling white particles
+                for (int i = 0; i < 4; i++) {
+                    worldIn.addParticle(ModParticles.FAIRY_RING, center.x, center.y, center.z, (rand.nextDouble() - 0.5) * 0.05, 0.05D + rand.nextDouble() * 0.05, (rand.nextDouble() - 0.5) * 0.05);
+                }
+            }
+
+            if (this.mode != FairyRingMode.NORMAL) {
+                //fairy/witch mode outer ring with high white particles (with recipe higher)
+                double factor = 1;
+                if (runningRecipe) {
+                    factor = 2;
+                }
+                int particleCount = 12;
+                double anglePerParticle = 360.0D / particleCount;
+                double variance = anglePerParticle / 2;
+                for (int i = 0; i < particleCount; i++) {
+                    double rad = Math.toRadians(anglePerParticle * i + (rand.nextDouble() - variance / 2) * variance);
+                    double x = 1.5 * Math.cos(rad) + center.x;
+                    double z = 1.5 * Math.sin(rad) + center.z;
+                    worldIn.addParticle(ModParticles.FAIRY_RING, x, center.y, z, 0, 0.05D * factor, 0);
+                }
             }
         }
     }
