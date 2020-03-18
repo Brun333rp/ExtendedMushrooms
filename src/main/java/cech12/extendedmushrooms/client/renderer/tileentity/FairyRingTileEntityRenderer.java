@@ -40,6 +40,15 @@ public class FairyRingTileEntityRenderer extends TileEntityRenderer<FairyRingTil
 
             double time = ClientTickObserver.ticksSinceStart + partticks;
 
+            //get recipe progress
+            float quadraticRecipeProgress = 0;
+            float quadraticRecipeProgressInverse = 1;
+            if (fairyRing.getRecipeTimeTotal() > 0) {
+                float recipeProgress = (float) fairyRing.getRecipeTime() / (float) fairyRing.getRecipeTimeTotal();
+                float recipeProgressInverse = 1 - recipeProgress;
+                quadraticRecipeProgress = recipeProgress * recipeProgress;
+                quadraticRecipeProgressInverse = recipeProgressInverse * recipeProgressInverse;
+            }
             float anglePerItem = 360F / itemCount;
             Minecraft mc = Minecraft.getInstance();
             mc.textureManager.bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
@@ -49,11 +58,11 @@ public class FairyRingTileEntityRenderer extends TileEntityRenderer<FairyRingTil
                 if (itemCount > 1) {
                     //deposit items in a circle, when more than one items are in inventory
                     matrixStack.rotate(new Quaternion(yAxis, (float) Math.toRadians(anglePerItem * i), false));
-                    matrixStack.translate(0.75, 0, 0);
+                    matrixStack.translate(0.75 * quadraticRecipeProgressInverse, 0, 0);
                 }
                 //add some (slow) motion
                 matrixStack.rotate(new Quaternion(yAxis, (float) Math.toRadians((time / 3 + i * 10) % 360), false));
-                matrixStack.translate(0, Math.sin((time + i * 10) / 10.0) * 0.01 + 0.05, 0);
+                matrixStack.translate(0, Math.sin((time + i * 10) / 10.0) * 0.01 + 0.05 + (1.1 * quadraticRecipeProgress), 0);
                 //render item
                 ItemStack stack = fairyRing.getStackInSlot(i);
                 if(!stack.isEmpty()) {

@@ -103,7 +103,10 @@ public class FairyRingBlock extends AirBlock {
     @OnlyIn(Dist.CLIENT)
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         super.animateTick(stateIn, worldIn, pos, rand);
-        worldIn.addParticle(ParticleTypes.MYCELIUM, -0.5 + pos.getX() + rand.nextFloat() * 2, pos.getY() + 0.1F, -0.5 + pos.getZ() + rand.nextFloat() * 2, 0.0D, 0.0D, 0.0D);
+        TileEntity tileentity = worldIn.getTileEntity(pos);
+        if (tileentity instanceof FairyRingTileEntity) {
+            ((FairyRingTileEntity) tileentity).animateTick(stateIn, worldIn, pos, rand);
+        }
     }
 
     @Override

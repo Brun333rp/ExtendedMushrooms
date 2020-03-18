@@ -83,7 +83,7 @@ public class FairyRingRecipe implements IFairyRingRecipe, IRecipe<IInventory> {
     @Nullable
     @Override
     public ItemStack getResultItemStack() {
-        return resultStack;
+        return resultStack.copy();
     }
 
     @Nonnull
@@ -92,10 +92,15 @@ public class FairyRingRecipe implements IFairyRingRecipe, IRecipe<IInventory> {
         return this.resultMode;
     }
 
+
+    /**
+     * Get the result of this recipe, usually for display purposes (e.g. recipe book). If your recipe has more than one
+     * possible result (e.g. it's dynamic and depends on its inputs), then return an empty stack.
+     */
     @Nonnull
     @Override
     public ItemStack getRecipeOutput() {
-        return this.resultStack;
+        return this.resultStack.copy();
     }
 
     @Nonnull
@@ -158,7 +163,7 @@ public class FairyRingRecipe implements IFairyRingRecipe, IRecipe<IInventory> {
     @Nonnull
     @Deprecated
     @Override
-    public ItemStack getCraftingResult (@Nonnull IInventory inv) {
+    public ItemStack getCraftingResult(@Nonnull IInventory inv) {
         // This method is ignored. - getResultItemStack is used.
         return this.resultStack.copy();
     }

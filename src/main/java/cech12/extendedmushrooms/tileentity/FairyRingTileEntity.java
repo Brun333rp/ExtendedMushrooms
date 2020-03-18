@@ -1,6 +1,9 @@
 package cech12.extendedmushrooms.tileentity;
 
-import cech12.extendedmushrooms.api.block.ExtendedMushroomsBlocks;
+import cech12.extendedmushrooms.ExtendedMushrooms;
+import cech12.extendedmushrooms.api.recipe.ExtendedMushroomsRecipeTypes;
+import cech12.extendedmushrooms.api.recipe.FairyRingMode;
+import cech12.extendedmushrooms.api.recipe.FairyRingRecipe;
 import cech12.extendedmushrooms.api.tileentity.ExtendedMushroomsTileEntities;
 import cech12.extendedmushrooms.block.FairyRingBlock;
 import net.minecraft.block.BlockState;
@@ -10,6 +13,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
@@ -21,9 +25,13 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.Random;
 
 public class FairyRingTileEntity extends TileEntity implements IInventory, ITickableTileEntity {
 
@@ -37,8 +45,12 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
     private BlockPos masterPos;
 
     private NonNullList<ItemStack> items = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);
+    private FairyRingMode mode = FairyRingMode.NORMAL;
     private int recipeTime;
     private int recipeTimeTotal;
+
+    //recipe caching
+    protected FairyRingRecipe currentRecipe;
 
     public FairyRingTileEntity() {
         super(ExtendedMushroomsTileEntities.FAIRY_RING);
@@ -53,6 +65,7 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
         if (this.getWorld() != null && !this.getWorld().isRemote) {
             //if master value is already set, do nothing
             if (this.isMaster() || this.hasMaster()) {
+                this.loadRecipe();
                 return;
             }
             //initial loading of this tile entity.
@@ -125,6 +138,7 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
         if (this.isMaster()) {
             this.items = NonNullList.withSize(INVENTORY_SIZE, ItemStack.EMPTY);
             ItemStackHelper.loadAllItems(compound, this.items);
+            this.mode = FairyRingMode.byName(compound.getString("Mode"));
             this.recipeTime = compound.getInt("RecipeTime");
             this.recipeTimeTotal = compound.getInt("RecipeTimeTotal");
         }
@@ -141,6 +155,7 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
         compound.putBoolean("IsMaster", isMaster);
         if (this.isMaster()) {
             ItemStackHelper.saveAllItems(compound, this.items);
+            compound.putString("Mode", this.mode.getName());
             compound.putInt("RecipeTime", this.recipeTime);
             compound.putInt("RecipeTimeTotal", this.recipeTimeTotal);
         }
@@ -196,6 +211,17 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
                         this.decrStackSize(i, stack.getCount());
                     }
                 }
+                boolean dirty = false;
+                // reset mode
+                if (this.mode != FairyRingMode.NORMAL) {
+                    this.mode = FairyRingMode.NORMAL;
+                    dirty = true;
+                }
+                // check and update recipe
+                dirty |= this.updateRecipe();
+                if (dirty) {
+                    this.sendUpdates();
+                }
             }
         }
     }
@@ -216,18 +242,133 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
             Vec3d calculatedMotion = new Vec3d(centerToStack.x, 0, centerToStack.z).normalize().scale(scaleFactor);
             itemEntity.setMotion(itemEntity.getMotion().add(calculatedMotion));
         }
-        //TODO check recipes!
-        // Collection<IRecipe<?>> recipes = ExtendedMushrooms.getRecipes(ExtendedMushroomsRecipeTypes.FAIRY_RING, this.getWorld().getRecipeManager()).values();
+
+        // check and update recipe
+        if (this.updateRecipe()) {
+            this.sendUpdates();
+        }
     }
 
+    /**
+     * Loads recipe. Should only be called in onLoad method.
+     * Hint: Sends no updates to client.
+     */
+    protected void loadRecipe() {
+        if (this.isMaster()) {
+            this.currentRecipe = this.getRecipe();
+            if (this.currentRecipe == null) {
+                this.recipeTime = 0;
+                this.recipeTimeTotal = 0;
+            }
+        }
+    }
 
+    /**
+     * reset cached recipe and recipe times.
+     * Hint: Sends no updates to client.
+     */
+    protected void resetRecipe() {
+        this.currentRecipe = null;
+        this.recipeTime = 0;
+        this.recipeTimeTotal = 0;
+    }
+
+    /**
+     * Updates the current recipe.
+     * Hint: Sends no updates to client.
+     * @return true when recipe changed. false otherwise.
+     */
+    protected boolean updateRecipe() {
+        if (this.isMaster()) {
+            FairyRingRecipe oldRecipe = this.currentRecipe;
+            FairyRingRecipe newRecipe = this.getRecipe();
+            if (oldRecipe != newRecipe) {
+                this.recipeTime = 0;
+                if (newRecipe != null) {
+                    this.recipeTimeTotal = newRecipe.getRecipeTime();
+                } else {
+                    this.recipeTimeTotal = 0;
+                }
+                this.currentRecipe = newRecipe;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Get valid recipe related to items in inventory.
+     * Cached recipe is used but not set in this method. For updating recipe cache use updateRecipe() method.
+     * @return a valid FairyRingRecipe or null when no valid recipe exist.
+     */
+    protected FairyRingRecipe getRecipe() {
+        if (!this.isMaster() || this.getWorld() == null || this.isEmpty()) {
+            return null;
+        }
+        if (this.currentRecipe != null && this.currentRecipe.isValid(this.mode, this)) {
+            return this.currentRecipe;
+        } else {
+            Collection<IRecipe<?>> recipes = ExtendedMushrooms.getRecipes(ExtendedMushroomsRecipeTypes.FAIRY_RING, this.getWorld().getRecipeManager()).values();
+            for (IRecipe<?> recipe : recipes) {
+                if (recipe instanceof FairyRingRecipe && ((FairyRingRecipe) recipe).isValid(this.mode, this)) {
+                    return (FairyRingRecipe) recipe;
+                }
+            }
+        }
+        return null;
+    }
 
     @Override
     public void tick() {
-        if (this.isMaster() && this.getWorld() != null) {
-            //some particles in center
-            this.getWorld().addBlockEvent(this.getPos(), ExtendedMushroomsBlocks.FAIRY_RING, EFFECT_EVENT, 0);
-            //TODO do cool stuff!
+        boolean dirty = false;
+        if (this.isMaster() && this.getWorld() != null && !this.getWorld().isRemote) {
+            FairyRingRecipe recipe = this.getRecipe();
+            if (recipe != null) {
+                //increase recipe time
+                if (this.recipeTime < this.recipeTimeTotal) {
+                    this.recipeTime++;
+                    dirty = true;
+                }
+                //detect finished recipe
+                if (this.recipeTime >= this.recipeTimeTotal) {
+                    //update fairy ring mode
+                    if (this.mode != this.currentRecipe.getResultMode()) {
+                        this.mode = this.currentRecipe.getResultMode();
+                    }
+                    //clear inventory and pop out result itemStack
+                    this.clear();
+                    Vec3d center = this.getCenter();
+                    ItemStack resultStack = this.currentRecipe.getResultItemStack();
+                    if (resultStack != null && resultStack != ItemStack.EMPTY) {
+                        ItemEntity itemEntity = new ItemEntity(this.getWorld(), center.x, center.y + 1.1, center.z, resultStack);
+                        itemEntity.setMotion(new Vec3d(0, 0.2, 0));
+                        this.getWorld().addEntity(itemEntity);
+                    }
+                    //reset and update recipe
+                    this.resetRecipe();
+                    this.updateRecipe();
+                    dirty = true;
+                }
+            }
+        }
+        if (dirty) {
+            this.sendUpdates();
+        }
+    }
+
+    /**
+     * Called periodically client side by FairyRingBlocks near the player to show effects.
+     */
+    @OnlyIn(Dist.CLIENT)
+    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+        worldIn.addParticle(ParticleTypes.MYCELIUM, -0.5 + pos.getX() + rand.nextFloat() * 2, pos.getY() + 0.1F, -0.5 + pos.getZ() + rand.nextFloat() * 2, 0.0D, 0.0D, 0.0D);
+        if (this.isMaster()) {
+            if (this.recipeTime < this.recipeTimeTotal) {
+                Vec3d center = this.getCenter();
+                //TODO better particles
+                worldIn.addParticle(ParticleTypes.MYCELIUM, center.x, center.y, center.z, 0.0D, 0.0D, 0.0D);
+                worldIn.addParticle(ParticleTypes.MYCELIUM, center.x, center.y, center.z, 0.0D, 0.0D, 0.0D);
+            }
         }
     }
 
@@ -237,6 +378,8 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
      */
     @Override
     public boolean receiveClientEvent(int id, int param) {
+        //in tick() method
+        //this.getWorld().addBlockEvent(this.getPos(), ExtendedMushroomsBlocks.FAIRY_RING, EFFECT_EVENT, 0);
         switch (id) {
             case EFFECT_EVENT: {
                 if (this.getWorld() != null && this.getWorld().isRemote) {
@@ -250,6 +393,14 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
         }
     }
 
+    public int getRecipeTime() {
+        return this.recipeTime;
+    }
+
+    public int getRecipeTimeTotal() {
+        return this.recipeTimeTotal;
+    }
+
     /**
      *
      * @param stack ItemStack which should be added.
@@ -258,18 +409,18 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
     public ItemStack addItemStack(ItemStack stack) {
         FairyRingTileEntity master = this.getMaster();
         if (stack != null && master != null && !stack.isEmpty()) {
-            boolean changed = false;
+            boolean dirty = false;
             //each slot has only a stack size of 1
             for (int i = 0; i < master.items.size(); i++) {
                 if (master.items.get(i).isEmpty()) {
                     master.setInventorySlotContents(i, stack.split(1));
-                    changed = true;
+                    dirty = true;
                     if (stack.isEmpty()) {
                         break;
                     }
                 }
             }
-            if (changed) {
+            if (dirty) {
                 this.sendUpdates();
             }
         }
