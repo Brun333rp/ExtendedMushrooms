@@ -424,6 +424,10 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
         }
     }
 
+    public FairyRingMode getMode() {
+        return this.mode;
+    }
+
     public int getRecipeTime() {
         return this.recipeTime;
     }

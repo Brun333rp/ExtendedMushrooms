@@ -2,8 +2,10 @@ package cech12.extendedmushrooms.init;
 
 import cech12.extendedmushrooms.ExtendedMushrooms;
 import cech12.extendedmushrooms.api.entity.ExtendedMushroomsEntityTypes;
+import cech12.extendedmushrooms.client.renderer.entity.FairyRenderer;
 import cech12.extendedmushrooms.client.renderer.entity.MushroomSheepRenderer;
 import cech12.extendedmushrooms.config.Config;
+import cech12.extendedmushrooms.entity.passive.FairyEntity;
 import cech12.extendedmushrooms.entity.passive.MushroomSheepEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityClassification;
@@ -27,6 +29,7 @@ public class ModEntities {
     @SubscribeEvent
     public static void registerEntities(RegistryEvent.Register<EntityType<?>> event) {
         registerEntity("mushroom_sheep", MUSHROOM_SHEEP);
+        registerEntity("fairy", FAIRY);
     }
 
     private static <T extends Entity> EntityType<T> registerEntity(String key, EntityType<T> entityType) {
@@ -41,6 +44,7 @@ public class ModEntities {
     @OnlyIn(Dist.CLIENT)
     public static void setupRenderers() {
         RenderingRegistry.registerEntityRenderingHandler((EntityType<MushroomSheepEntity>) MUSHROOM_SHEEP, MushroomSheepRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler((EntityType<FairyEntity>) FAIRY, FairyRenderer::new);
     }
 
     /**
