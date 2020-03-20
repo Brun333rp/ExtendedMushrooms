@@ -1,5 +1,6 @@
 package cech12.extendedmushrooms.mixin;
 
+import cech12.extendedmushrooms.api.block.ExtendedMushroomsBlocks;
 import cech12.extendedmushrooms.block.mushrooms.BrownMushroom;
 import cech12.extendedmushrooms.block.mushrooms.RedMushroom;
 import cech12.extendedmushrooms.utils.TagUtils;
@@ -7,6 +8,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.MushroomBlock;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.server.ServerWorld;
@@ -35,7 +37,20 @@ public class MixinMushroomBlock {
                 Block blockBeneath = world.getBlockState(pos.down()).getBlock();
                 if (TagUtils.hasTag(blockBeneath, TagUtils.MUSHROOM_GROWING_BLOCKS) ||
                         (TagUtils.hasTag(blockBeneath, TagUtils.MUSHROOM_GROWING_BLOCKS_LIGHTLEVEL) && world.getLightSubtracted(pos, 0) < 13)) {
-                    ((MushroomBlock) state.getBlock()).grow(world, random, pos, state);
+                    //only grow when not part of a fairy ring
+                    Direction[] directions = { Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH };
+                    boolean partOfFairyRing = false;
+                    BlockPos.Mutable mutablePos = new BlockPos.Mutable();
+                    for (Direction direction : directions) {
+                        mutablePos.setPos(pos).move(direction);
+                        if (world.getBlockState(mutablePos).getBlock() == ExtendedMushroomsBlocks.FAIRY_RING) {
+                            partOfFairyRing = true;
+                            break;
+                        }
+                    }
+                    if (!partOfFairyRing) {
+                        ((MushroomBlock) state.getBlock()).grow(world, random, pos, state);
+                    }
                 }
             }
         }
