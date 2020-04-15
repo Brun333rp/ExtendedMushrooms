@@ -5,18 +5,27 @@ import cech12.extendedmushrooms.api.recipe.ExtendedMushroomsRecipeTypes;
 import cech12.extendedmushrooms.api.recipe.FairyRingRecipe;
 import cech12.extendedmushrooms.block.FairyRingBlock;
 import cech12.extendedmushrooms.config.Config;
+import cech12.extendedmushrooms.entity.ai.goal.EatMushroomGoal;
 import cech12.extendedmushrooms.entity.passive.MushroomSheepEntity;
 import cech12.extendedmushrooms.init.ModBlocks;
 import cech12.extendedmushrooms.init.ModEntities;
 import cech12.extendedmushrooms.init.ModFeatures;
 import cech12.extendedmushrooms.init.ModTileEntities;
 import cech12.extendedmushrooms.init.ModVanillaCompat;
+import cech12.extendedmushrooms.item.crafting.MushroomArrowRecipe;
+import cech12.extendedmushrooms.item.crafting.MushroomBrewingRecipe;
+import cech12.extendedmushrooms.loot_modifiers.MushroomCapLootModifier;
+import cech12.extendedmushrooms.loot_modifiers.MushroomStemLootModifier;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.HugeMushroomBlock;
 import net.minecraft.block.MushroomBlock;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.item.DyeItem;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipeSerializer;
+import net.minecraft.potion.Potions;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.IRecipeSerializer;
 import net.minecraft.item.crafting.IRecipeType;
@@ -30,7 +39,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.IWorld;
 import net.minecraftforge.common.ToolType;
+import net.minecraftforge.common.brewing.BrewingRecipeRegistry;
+import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -43,6 +55,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 import java.util.Map;
+import javax.annotation.Nonnull;
 
 @Mod(ExtendedMushrooms.MOD_ID)
 @Mod.EventBusSubscriber
@@ -55,6 +68,7 @@ public class ExtendedMushrooms {
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
+        FMLJavaModLoadingContext.get().getModEventBus().addGenericListener(GlobalLootModifierSerializer.class, this::onRegisterModifierSerializers);
 
         // Register an event with the mod specific event bus for mod own recipes.
         FMLJavaModLoadingContext.get().getModEventBus().addGenericListener(IRecipeSerializer.class, this::registerRecipeSerializers);
@@ -65,6 +79,10 @@ public class ExtendedMushrooms {
         ModBlocks.addBlocksToBiomes();
         ModEntities.addEntitiesToBiomes();
         ModFeatures.addFeaturesToBiomes();
+
+        //add potion recipes
+        //BrewingRecipeRegistry.addRecipe(new MushroomBrewingRecipe(ExtendedMushroomsBlocks.GLOWSHROOM.asItem(), Potions.NIGHT_VISION)); //overpowered
+        BrewingRecipeRegistry.addRecipe(new MushroomBrewingRecipe(ExtendedMushroomsBlocks.POISONOUS_MUSHROOM.asItem(), Potions.POISON));
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
@@ -79,7 +97,21 @@ public class ExtendedMushrooms {
                 ExtendedMushroomsRecipeTypes.FAIRY_RING);
 
         // Register the recipe serializer.
+        event.getRegistry().register(MushroomArrowRecipe.SERIALIZER);
         event.getRegistry().register(FairyRingRecipe.SERIALIZER);
+    }
+
+    /**
+     * Add some loot modifiers to be compatible with other mods and change some loot behaviour of vanilla Minecraft.
+     */
+    public void onRegisterModifierSerializers(@Nonnull final RegistryEvent.Register<GlobalLootModifierSerializer<?>> event)
+    {
+        event.getRegistry().register(
+                new MushroomCapLootModifier.Serializer().setRegistryName(MOD_ID, "mushroom_cap_harvest")
+        );
+        event.getRegistry().register(
+                new MushroomStemLootModifier.Serializer().setRegistryName(MOD_ID, "mushroom_stem_harvest")
+        );
     }
 
     /**
@@ -97,8 +129,16 @@ public class ExtendedMushrooms {
                 //play sound
                 event.getWorld().playSound(event.getPlayer(), event.getPos(), SoundEvents.ITEM_AXE_STRIP, SoundCategory.BLOCKS, 1.0F, 1.0F);
                 if (!event.getWorld().isRemote) {
+                    //copy block state orientation
+                    BlockState strippedBlockState = strippedBlock.getDefaultState();
+                    if (blockState.has(HugeMushroomBlock.UP)) strippedBlockState = strippedBlockState.with(HugeMushroomBlock.UP, blockState.get(HugeMushroomBlock.UP));
+                    if (blockState.has(HugeMushroomBlock.DOWN)) strippedBlockState = strippedBlockState.with(HugeMushroomBlock.DOWN, blockState.get(HugeMushroomBlock.DOWN));
+                    if (blockState.has(HugeMushroomBlock.NORTH)) strippedBlockState = strippedBlockState.with(HugeMushroomBlock.NORTH, blockState.get(HugeMushroomBlock.NORTH));
+                    if (blockState.has(HugeMushroomBlock.EAST)) strippedBlockState = strippedBlockState.with(HugeMushroomBlock.EAST, blockState.get(HugeMushroomBlock.EAST));
+                    if (blockState.has(HugeMushroomBlock.SOUTH)) strippedBlockState = strippedBlockState.with(HugeMushroomBlock.SOUTH, blockState.get(HugeMushroomBlock.SOUTH));
+                    if (blockState.has(HugeMushroomBlock.WEST)) strippedBlockState = strippedBlockState.with(HugeMushroomBlock.WEST, blockState.get(HugeMushroomBlock.WEST));
                     //replace block
-                    event.getWorld().setBlockState(event.getPos(), strippedBlock.getDefaultState(), 11);
+                    event.getWorld().setBlockState(event.getPos(), strippedBlockState, 11);
                     //do the item damage
                     if (event.getPlayer() != null) {
                         itemStack.damageItem(1, event.getPlayer(), (p_220040_1_) -> {
@@ -123,6 +163,19 @@ public class ExtendedMushrooms {
         if (entity instanceof MushroomSheepEntity && itemStack.getItem() instanceof DyeItem) {
             event.setCanceled(true);
             event.setCancellationResult(ActionResultType.FAIL);
+        }
+    }
+
+    /**
+     * Add eat mushroom goal to sheep entities when configured.
+     */
+    @SubscribeEvent
+    public static void onEntityJoinWorld(EntityJoinWorldEvent event) {
+        if (Config.SHEEP_EAT_MUSHROOM_FROM_GROUND_ENABLED.getValue()) {
+            if (event.getEntity() instanceof SheepEntity) { //also mushroom sheep
+                SheepEntity sheep = ((SheepEntity) event.getEntity());
+                sheep.goalSelector.addGoal(5, new EatMushroomGoal(sheep));
+            }
         }
     }
 

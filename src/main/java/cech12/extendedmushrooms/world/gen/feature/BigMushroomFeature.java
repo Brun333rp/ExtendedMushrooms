@@ -1,6 +1,6 @@
 package cech12.extendedmushrooms.world.gen.feature;
 
-import  cech12.extendedmushrooms.utils.TagUtils;
+import cech12.extendedmushrooms.api.tags.ExtendedMushroomsTags;
 import com.mojang.datafixers.Dynamic;
 import net.minecraft.block.Block;
 import net.minecraft.block.HugeMushroomBlock;
@@ -38,7 +38,7 @@ public abstract class BigMushroomFeature extends Feature<BigMushroomFeatureConfi
 
     protected boolean hasValidGround(IWorld world, BlockPos mushroomPos) {
         Block block = world.getBlockState(mushroomPos.down()).getBlock();
-        return TagUtils.hasTag(block, TagUtils.MUSHROOM_GROWING_BLOCKS) || TagUtils.hasTag(block, TagUtils.MUSHROOM_GROWING_BLOCKS_LIGHTLEVEL);
+        return block.isIn(ExtendedMushroomsTags.Blocks.MUSHROOM_GROWING_BLOCKS) || block.isIn(ExtendedMushroomsTags.Blocks.MUSHROOM_GROWING_BLOCKS_LIGHTLEVEL);
     }
 
     protected boolean canGrow(IWorld world, BlockPos blockPos, int size, int capRadius, BlockPos.Mutable mutableBlockPos, BigMushroomFeatureConfig config) {
@@ -94,8 +94,12 @@ public abstract class BigMushroomFeature extends Feature<BigMushroomFeatureConfi
     }
 
     protected void placeCapBlockIfPossible(IWorld world, Random random, BigMushroomFeatureConfig config, BlockPos blockPos, boolean west, boolean east, boolean north, boolean south) {
+        this.placeCapBlockIfPossible(world, random, config, blockPos, west, east, north, south, true);
+    }
+
+    protected void placeCapBlockIfPossible(IWorld world, Random random, BigMushroomFeatureConfig config, BlockPos blockPos, boolean west, boolean east, boolean north, boolean south, boolean up) {
         if (world.getBlockState(blockPos).canBeReplacedByLeaves(world, blockPos)) {
-            this.setBlockState(world, blockPos, config.field_227272_a_.getBlockState(random, blockPos).with(HugeMushroomBlock.WEST, west).with(HugeMushroomBlock.EAST, east).with(HugeMushroomBlock.NORTH, north).with(HugeMushroomBlock.SOUTH, south));
+            this.setBlockState(world, blockPos, config.field_227272_a_.getBlockState(random, blockPos).with(HugeMushroomBlock.WEST, west).with(HugeMushroomBlock.EAST, east).with(HugeMushroomBlock.NORTH, north).with(HugeMushroomBlock.SOUTH, south).with(HugeMushroomBlock.UP, up));
         }
     }
 
