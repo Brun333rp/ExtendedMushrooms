@@ -1,6 +1,7 @@
 package cech12.extendedmushrooms.mixin;
 
 import cech12.extendedmushrooms.MushroomUtils;
+import cech12.extendedmushrooms.api.block.ExtendedMushroomsBlocks;
 import cech12.extendedmushrooms.block.mushrooms.BrownMushroom;
 import cech12.extendedmushrooms.block.mushrooms.RedMushroom;
 import net.minecraft.block.BlockState;

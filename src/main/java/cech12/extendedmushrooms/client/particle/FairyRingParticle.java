@@ -5,8 +5,8 @@ import net.minecraft.client.particle.IParticleFactory;
 import net.minecraft.client.particle.IParticleRenderType;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.SpriteTexturedParticle;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.particles.BasicParticleType;
-import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -15,7 +15,7 @@ import javax.annotation.Nonnull;
 @OnlyIn(Dist.CLIENT)
 public class FairyRingParticle extends SpriteTexturedParticle {
 
-    protected FairyRingParticle(World world, double posX, double posY, double posZ, double motionX, double motionY, double motionZ, double maxAge, IAnimatedSprite sprite) {
+    protected FairyRingParticle(ClientWorld world, double posX, double posY, double posZ, double motionX, double motionY, double motionZ, double maxAge, IAnimatedSprite sprite) {
         super(world, posX, posY, posZ);
         this.selectSpriteRandomly(sprite);
         this.motionX = motionX;
@@ -66,7 +66,7 @@ public class FairyRingParticle extends SpriteTexturedParticle {
             this.spriteSet = p_i51045_1_;
         }
 
-        public Particle makeParticle(@Nonnull BasicParticleType typeIn, @Nonnull World worldIn, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
+        public Particle makeParticle(@Nonnull BasicParticleType typeIn, @Nonnull ClientWorld worldIn, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed) {
             return new FairyRingParticle(worldIn, x, y, z, xSpeed, ySpeed, zSpeed, 1.0F, this.spriteSet);
         }
     }

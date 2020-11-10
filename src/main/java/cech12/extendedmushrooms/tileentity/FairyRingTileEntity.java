@@ -24,7 +24,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -36,7 +36,7 @@ import java.util.Random;
 
 public class FairyRingTileEntity extends TileEntity implements IInventory, ITickableTileEntity {
 
-    public static final Vec3d CENTER_TRANSLATION_VECTOR = new Vec3d(1, 0, 1);
+    public static final Vector3d CENTER_TRANSLATION_VECTOR = new Vector3d(1, 0, 1);
     public static final int INVENTORY_SIZE = 16;
 
     private static final int EFFECT_EVENT = 0;
@@ -91,8 +91,9 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
     /**
      * Should only be called by master!
      */
-    public Vec3d getCenter() {
-        return new Vec3d(this.getPos()).add(CENTER_TRANSLATION_VECTOR);
+    public Vector3d getCenter() {
+        BlockPos position = this.getPos();
+        return new Vector3d(position.getX(), position.getY(), position.getZ()).add(CENTER_TRANSLATION_VECTOR);
     }
 
     public boolean hasMaster() {
@@ -131,8 +132,8 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
     }
 
     @Override
-    public void read(CompoundNBT compound) {
-        super.read(compound);
+    public void read(BlockState state, CompoundNBT compound) {
+        super.read(state, compound);
         this.masterPos = new BlockPos(compound.getInt("MasterX"), compound.getInt("MasterY"), compound.getInt("MasterZ"));
         this.hasMaster = compound.getBoolean("HasMaster");
         this.isMaster = compound.getBoolean("IsMaster");
@@ -177,7 +178,7 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
 
     @Override
     public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
-        this.read(pkt.getNbtCompound());
+        this.read(this.world.getBlockState(pkt.getPos()), pkt.getNbtCompound());
     }
 
     /**
@@ -238,9 +239,9 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
             itemEntity.setItem(remainingStack);
             //itemEntity shouldn't stay inside of FairyRingTileEntity (performance issue)
             //so, push remaining stack to border.
-            Vec3d centerToStack = itemEntity.getPositionVec().subtract(this.getCenter());
+            Vector3d centerToStack = itemEntity.getPositionVec().subtract(this.getCenter());
             double scaleFactor = (1.8 - centerToStack.length()) * 0.08; //1.8 is sqrt(3) | 0.08 is speed
-            Vec3d calculatedMotion = new Vec3d(centerToStack.x, 0, centerToStack.z).normalize().scale(scaleFactor);
+            Vector3d calculatedMotion = new Vector3d(centerToStack.x, 0, centerToStack.z).normalize().scale(scaleFactor);
             itemEntity.setMotion(itemEntity.getMotion().add(calculatedMotion));
         }
 
@@ -338,11 +339,11 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
                     }
                     //clear inventory and pop out result itemStack
                     this.clear();
-                    Vec3d center = this.getCenter();
+                    Vector3d center = this.getCenter();
                     ItemStack resultStack = this.currentRecipe.getResultItemStack();
                     if (resultStack != null && resultStack != ItemStack.EMPTY) {
                         ItemEntity itemEntity = new ItemEntity(this.getWorld(), center.x, center.y + 1.1, center.z, resultStack);
-                        itemEntity.setMotion(new Vec3d(0, 0.2, 0));
+                        itemEntity.setMotion(new Vector3d(0, 0.2, 0));
                         this.getWorld().addEntity(itemEntity);
                     }
                     //reset and update recipe
@@ -363,7 +364,7 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
     @OnlyIn(Dist.CLIENT)
     public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
         if (this.isMaster()) {
-            Vec3d center = this.getCenter();
+            Vector3d center = this.getCenter();
             boolean runningRecipe = this.recipeTime < this.recipeTimeTotal;
             if (this.mode == FairyRingMode.NORMAL && !runningRecipe) {
                 //normal mode without recipe process: some mycelium particles on ground
@@ -414,7 +415,7 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
         switch (id) {
             case EFFECT_EVENT: {
                 if (this.getWorld() != null && this.getWorld().isRemote) {
-                    Vec3d center = this.getCenter();
+                    Vector3d center = this.getCenter();
                     //TODO some nice effects!
                     this.getWorld().addParticle(ParticleTypes.MYCELIUM, center.x, center.y, center.z, 0.0D, 0.0D, 0.0D);
                 }
