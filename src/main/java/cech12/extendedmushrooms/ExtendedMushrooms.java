@@ -52,6 +52,7 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -76,17 +77,20 @@ public class ExtendedMushrooms {
     public ExtendedMushrooms() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.COMMON, "extendedmushrooms-common.toml");
 
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
-        FMLJavaModLoadingContext.get().getModEventBus().addGenericListener(GlobalLootModifierSerializer.class, this::onRegisterModifierSerializers);
+        final IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
+
+        eventBus.addListener(this::setup);
+        eventBus.addListener(this::clientSetup);
+        eventBus.addGenericListener(GlobalLootModifierSerializer.class, this::onRegisterModifierSerializers);
 
         // Register an event with the mod specific event bus for mod own recipes.
-        FMLJavaModLoadingContext.get().getModEventBus().addGenericListener(IRecipeSerializer.class, this::registerRecipeSerializers);
+        eventBus.addGenericListener(IRecipeSerializer.class, this::registerRecipeSerializers);
+
+        ModBlocks.registerBlocks(eventBus);
     }
 
     private void setup(final FMLCommonSetupEvent event) {
         ModVanillaCompat.setup();
-        ModEntities.registerAttributes();
 
         //add potion recipes
         //BrewingRecipeRegistry.addRecipe(new MushroomBrewingRecipe(ModTags.ForgeItems.MUSHROOMS_GLOWSHROOM, Potions.NIGHT_VISION)); //overpowered
@@ -96,7 +100,7 @@ public class ExtendedMushrooms {
     private void clientSetup(final FMLClientSetupEvent event) {
         ModBlocks.setupRenderLayers();
         ModEntities.setupRenderers();
-        ModTileEntities.setupRenderers();
+        ModTileEntities.setupRenderers(event);
     }
 
     private void registerRecipeSerializers(RegistryEvent.Register<IRecipeSerializer<?>> event) {
@@ -115,8 +119,7 @@ public class ExtendedMushrooms {
     /**
      * Add some loot modifiers to be compatible with other mods and change some loot behaviour of vanilla Minecraft.
      */
-    public void onRegisterModifierSerializers(@Nonnull final RegistryEvent.Register<GlobalLootModifierSerializer<?>> event)
-    {
+    public void onRegisterModifierSerializers(@Nonnull final RegistryEvent.Register<GlobalLootModifierSerializer<?>> event) {
         event.getRegistry().register(
                 new MushroomCapLootModifier.Serializer().setRegistryName(MOD_ID, "mushroom_cap_harvest")
         );
@@ -127,7 +130,6 @@ public class ExtendedMushrooms {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onBiomeLoadingEvent(final BiomeLoadingEvent event) {
-        ModBlocks.addBlocksToBiomes(event);
         ModEntities.addEntitiesToBiomes(event);
         ModFeatures.addFeaturesToBiomes(event);
     }

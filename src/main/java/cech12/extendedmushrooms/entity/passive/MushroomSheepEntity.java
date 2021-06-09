@@ -8,10 +8,7 @@ import cech12.extendedmushrooms.item.MushroomType;
 import net.minecraft.entity.AgeableEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ILivingEntityData;
-import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.attributes.AttributeModifierMap;
-import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.BreedGoal;
 import net.minecraft.entity.ai.goal.EatGrassGoal;
 import net.minecraft.entity.ai.goal.FollowParentGoal;
@@ -128,12 +125,6 @@ public class MushroomSheepEntity extends SheepEntity {
         super.livingTick();
     }
 
-    public static AttributeModifierMap.MutableAttribute registerAttributes() {
-        return MobEntity.func_233666_p_()
-                .createMutableAttribute(Attributes.MAX_HEALTH, 8.0D)
-                .createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.23F);
-    }
-
     @Override
     protected void registerData() {
         super.registerData();
@@ -185,10 +176,9 @@ public class MushroomSheepEntity extends SheepEntity {
     }
 
     @Override
-    //processInteract
-    public @Nonnull ActionResultType func_230254_b_(PlayerEntity player, @Nonnull Hand hand) {
+    public @Nonnull ActionResultType getEntityInteractionResult(PlayerEntity player, @Nonnull Hand hand) {
         Item item = player.getHeldItem(hand).getItem();
-        ActionResultType superResult = super.func_230254_b_(player, hand); //processInteract
+        ActionResultType superResult = super.getEntityInteractionResult(player, hand);
         if (superResult.isSuccessOrConsume() && Config.SHEEP_ABSORB_MUSHROOM_TYPE_ENABLED.get() && item.isIn(Tags.Items.MUSHROOMS)) {
             //change mushroom type
             MushroomType type = MushroomType.byItemOrNull(item);
@@ -299,8 +289,7 @@ public class MushroomSheepEntity extends SheepEntity {
     }
 
     @Override
-    //createChild
-    public SheepEntity func_241840_a(@Nonnull ServerWorld world, @Nonnull AgeableEntity ageable) {
+    public SheepEntity createChild(@Nonnull ServerWorld world, @Nonnull AgeableEntity ageable) {
         if (ageable instanceof MushroomSheepEntity) {
             // only create a mushroom sheep, when both parents are mushroom sheeps.
             MushroomSheepEntity child = (MushroomSheepEntity) ExtendedMushroomsEntityTypes.MUSHROOM_SHEEP.create(world);

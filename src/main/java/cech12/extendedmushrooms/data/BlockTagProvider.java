@@ -5,6 +5,7 @@ import cech12.extendedmushrooms.api.block.ExtendedMushroomsBlocks;
 import cech12.extendedmushrooms.block.BookshelfBlock;
 import cech12.extendedmushrooms.block.MushroomCapButtonBlock;
 import cech12.extendedmushrooms.block.MushroomCapPressurePlateBlock;
+import cech12.extendedmushrooms.block.MushroomStandingSignBlock;
 import cech12.extendedmushrooms.block.MushroomWoodButtonBlock;
 import cech12.extendedmushrooms.block.MushroomWoodPressurePlateBlock;
 import cech12.extendedmushrooms.block.VariantChestBlock;
@@ -29,8 +30,6 @@ import net.minecraftforge.common.data.ExistingFileHelper;
 import javax.annotation.Nonnull;
 import java.util.Comparator;
 import java.util.function.Predicate;
-
-import static cech12.extendedmushrooms.init.ModTags.Blocks.MUSHROOM_CHESTS_TRAPPED;
 
 public class BlockTagProvider extends BlockTagsProvider {
 
@@ -66,7 +65,7 @@ public class BlockTagProvider extends BlockTagsProvider {
                 .filter(block -> block instanceof VariantChestBlock)
                 .sorted(Comparator.comparing(Block::getRegistryName))
                 .toArray(Block[]::new));
-        getOrCreateBuilder(MUSHROOM_CHESTS_TRAPPED).add(registry.stream().filter(extendedMushrooms)
+        getOrCreateBuilder(ModTags.Blocks.MUSHROOM_CHESTS_TRAPPED).add(registry.stream().filter(extendedMushrooms)
                 .filter(block -> block instanceof VariantTrappedChestBlock)
                 .sorted(Comparator.comparing(Block::getRegistryName))
                 .toArray(Block[]::new));
@@ -101,6 +100,10 @@ public class BlockTagProvider extends BlockTagsProvider {
         getOrCreateBuilder(ModTags.Blocks.MUSHROOM_PRESSURE_PLATES)
                 .addTag(ModTags.Blocks.MUSHROOM_PRESSURE_PLATES_WOOD)
                 .addTag(ModTags.Blocks.MUSHROOM_PRESSURE_PLATES_WOOL);
+        getOrCreateBuilder(ModTags.Blocks.MUSHROOM_SIGNS).add(registry.stream().filter(extendedMushrooms)
+                .filter(block -> block instanceof MushroomStandingSignBlock)
+                .sorted(Comparator.comparing(Block::getRegistryName))
+                .toArray(Block[]::new));
         getOrCreateBuilder(ModTags.Blocks.MUSHROOM_SLABS).add(registry.stream().filter(extendedMushrooms)
                 .filter(block -> block instanceof SlabBlock)
                 .sorted(Comparator.comparing(Block::getRegistryName))
@@ -159,19 +162,22 @@ public class BlockTagProvider extends BlockTagsProvider {
         getOrCreateBuilder(ModTags.ForgeBlocks.MUSHROOMS_POISONOUS)
                 .add(ExtendedMushroomsBlocks.POISONOUS_MUSHROOM);
 
+        //generate standard forge tags
         getOrCreateBuilder(Tags.Blocks.CHESTS).addTag(ModTags.Blocks.MUSHROOM_CHESTS);
-        getOrCreateBuilder(Tags.Blocks.CHESTS_TRAPPED).addTag(MUSHROOM_CHESTS_TRAPPED);
-        getOrCreateBuilder(Tags.Blocks.CHESTS_WOODEN).addTags(ModTags.Blocks.MUSHROOM_CHESTS, MUSHROOM_CHESTS_TRAPPED);
+        getOrCreateBuilder(Tags.Blocks.CHESTS_TRAPPED).addTag(ModTags.Blocks.MUSHROOM_CHESTS_TRAPPED);
+        getOrCreateBuilder(Tags.Blocks.CHESTS_WOODEN).addTags(ModTags.Blocks.MUSHROOM_CHESTS, ModTags.Blocks.MUSHROOM_CHESTS_TRAPPED);
         getOrCreateBuilder(Tags.Blocks.FENCE_GATES_WOODEN).addTag(ModTags.Blocks.MUSHROOM_FENCE_GATES);
         getOrCreateBuilder(Tags.Blocks.FENCE_GATES).addTag(ModTags.Blocks.MUSHROOM_FENCE_GATES);
 
         //generate minecraft tags
         getOrCreateBuilder(BlockTags.BUTTONS).addTag(ModTags.Blocks.MUSHROOM_BUTTONS);
         getOrCreateBuilder(BlockTags.CARPETS).addTag(ModTags.Blocks.MUSHROOM_CARPETS);
+        getOrCreateBuilder(BlockTags.CLIMBABLE).addTag(ModTags.Blocks.MUSHROOM_LADDERS);
         getOrCreateBuilder(BlockTags.DOORS).addTag(ModTags.Blocks.MUSHROOM_DOORS);
         getOrCreateBuilder(BlockTags.FENCES).addTag(ModTags.Blocks.MUSHROOM_FENCES);
         getOrCreateBuilder(BlockTags.LOGS).addTag(ModTags.ForgeBlocks.MUSHROOM_STEMS);
         getOrCreateBuilder(BlockTags.PLANKS).addTag(ModTags.Blocks.MUSHROOM_PLANKS);
+        getOrCreateBuilder(BlockTags.SIGNS).addTag(ModTags.Blocks.MUSHROOM_SIGNS);
         getOrCreateBuilder(BlockTags.SLABS).addTag(ModTags.Blocks.MUSHROOM_SLABS);
         getOrCreateBuilder(BlockTags.SMALL_FLOWERS).add(ExtendedMushroomsBlocks.INFESTED_FLOWER);
         getOrCreateBuilder(BlockTags.STAIRS).addTag(ModTags.Blocks.MUSHROOM_STAIRS);
