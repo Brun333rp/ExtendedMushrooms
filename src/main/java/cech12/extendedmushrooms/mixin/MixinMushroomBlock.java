@@ -31,21 +31,19 @@ public class MixinMushroomBlock {
         //Forge: prevent loading unloaded chunks
         if (world.isAreaLoaded(pos, 7) && random.nextInt(25) == 0) {
             if (state.getBlock() instanceof MushroomBlock) {
-                if (MushroomUtils.isValidMushroomPosition(world, pos)) {
-                    //only grow when not part of a fairy ring
-                    Direction[] directions = { Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH };
-                    boolean partOfFairyRing = false;
-                    BlockPos.Mutable mutablePos = new BlockPos.Mutable();
-                    for (Direction direction : directions) {
-                        mutablePos.setPos(pos).move(direction);
-                        if (world.getBlockState(mutablePos).getBlock() == ExtendedMushroomsBlocks.FAIRY_RING) {
-                            partOfFairyRing = true;
-                            break;
-                        }
+                //only grow when not part of a fairy ring
+                Direction[] directions = { Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH };
+                boolean partOfFairyRing = false;
+                BlockPos.Mutable mutablePos = new BlockPos.Mutable();
+                for (Direction direction : directions) {
+                    mutablePos.setPos(pos).move(direction);
+                    if (world.getBlockState(mutablePos).getBlock() == ExtendedMushroomsBlocks.FAIRY_RING) {
+                        partOfFairyRing = true;
+                        break;
                     }
-                    if (!partOfFairyRing) {
-                        ((MushroomBlock) state.getBlock()).grow(world, random, pos, state);
-                    }
+                }
+                if (!partOfFairyRing) {
+                    ((MushroomBlock) state.getBlock()).grow(world, random, pos, state);
                 }
             }
         }
@@ -58,7 +56,9 @@ public class MixinMushroomBlock {
      */
     @Inject(at = @At("HEAD"), method = "grow", cancellable = true)
     public void growProxy(ServerWorld world, BlockPos pos, BlockState state, Random random, CallbackInfoReturnable<Boolean> cir) {
-        if (state.getBlock() == Blocks.BROWN_MUSHROOM) {
+        if (!MushroomUtils.isValidMushroomPosition(world, pos)) {
+            cir.setReturnValue(false);
+        } else if (state.getBlock() == Blocks.BROWN_MUSHROOM) {
             (new BrownMushroom()).growMushroom(world, world.getChunkProvider().getChunkGenerator(), pos, state, random);
             cir.setReturnValue(true);
         } else if (state.getBlock() == Blocks.RED_MUSHROOM) {
