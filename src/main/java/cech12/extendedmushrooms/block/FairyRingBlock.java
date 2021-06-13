@@ -13,7 +13,6 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.BlockItemUseContext;
-import net.minecraft.particles.ParticleTypes;
 import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -45,25 +44,34 @@ public class FairyRingBlock extends AirBlock {
         this.setDefaultState(this.stateContainer.getBaseState().with(FACING, Direction.NORTH));
     }
 
+    @Override
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
         builder.add(FACING);
     }
 
+    @Nonnull
+    @Deprecated
+    @Override
     public BlockState mirror(BlockState state, Mirror mirrorIn) {
         return state.rotate(mirrorIn.toRotation(state.get(FACING)));
     }
 
+    @Nonnull
+    @Deprecated
+    @Override
     public BlockState rotate(BlockState state, Rotation rot) {
         return state.with(FACING, rot.rotate(state.get(FACING)));
     }
 
+    @Override
     public BlockState getStateForPlacement(BlockItemUseContext context) {
         return this.getDefaultState().with(FACING, context.getPlacementHorizontalFacing().getOpposite());
     }
 
     @Nonnull
+    @Deprecated
     @Override
-    public BlockRenderType getRenderType(BlockState p_149645_1_) {
+    public BlockRenderType getRenderType(@Nullable BlockState state) {
         return BlockRenderType.MODEL;
     }
 
@@ -78,13 +86,17 @@ public class FairyRingBlock extends AirBlock {
         return new FairyRingTileEntity();
     }
 
-    public void onEntityCollision(BlockState blockState, World world, BlockPos blockPos, Entity entity) {
+    @Deprecated
+    @Override
+    public void onEntityCollision(@Nullable BlockState blockState, World world, @Nonnull BlockPos blockPos, @Nonnull Entity entity) {
         TileEntity tileentity = world.getTileEntity(blockPos);
         if (tileentity instanceof FairyRingTileEntity) {
-            ((FairyRingTileEntity) tileentity).onEntityCollision(world, entity);
+            ((FairyRingTileEntity) tileentity).onEntityCollision(entity);
         }
     }
 
+    @Deprecated
+    @Override
     public void onReplaced(BlockState state, @Nonnull World worldIn, @Nonnull BlockPos pos, BlockState newState, boolean isMoving) {
         if (state.getBlock() != newState.getBlock()) {
             TileEntity tileentity = worldIn.getTileEntity(pos);
@@ -100,23 +112,26 @@ public class FairyRingBlock extends AirBlock {
     /**
      * Called periodically client side on blocks near the player to show effects.
      */
+    @Override
     @OnlyIn(Dist.CLIENT)
-    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+    public void animateTick(@Nonnull BlockState stateIn, World worldIn, @Nonnull BlockPos pos, @Nonnull Random rand) {
         TileEntity tileentity = worldIn.getTileEntity(pos);
         if (tileentity instanceof FairyRingTileEntity) {
-            ((FairyRingTileEntity) tileentity).animateTick(stateIn, worldIn, pos, rand);
+            ((FairyRingTileEntity) tileentity).animateTick(worldIn, rand);
         }
     }
 
+    @Deprecated
     @Override
-    public boolean eventReceived(BlockState state, World world, BlockPos pos, int id, int param) {
+    public boolean eventReceived(@Nonnull BlockState state, @Nonnull World world, @Nonnull BlockPos pos, int id, int param) {
         super.eventReceived(state, world, pos, id, param);
         TileEntity tileentity = world.getTileEntity(pos);
         return tileentity != null && tileentity.receiveClientEvent(id, param);
     }
 
+    @Deprecated
     @Override
-    public void neighborChanged(BlockState blockState, World world, BlockPos blockPos, Block block, BlockPos neighbourPos, boolean isMoving) {
+    public void neighborChanged(@Nonnull BlockState blockState, @Nonnull World world, @Nonnull BlockPos blockPos, @Nonnull Block block, @Nonnull BlockPos neighbourPos, boolean isMoving) {
         //check for 2 mushrooms and 2 Fairy Ring blocks as neighbour. (diagonally the same)
         //check if block below is solid
         boolean mushroomSeen = false;

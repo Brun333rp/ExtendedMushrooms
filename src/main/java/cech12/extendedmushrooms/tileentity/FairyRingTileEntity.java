@@ -132,7 +132,7 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
     }
 
     @Override
-    public void read(BlockState state, CompoundNBT compound) {
+    public void read(@Nonnull BlockState state, @Nonnull CompoundNBT compound) {
         super.read(state, compound);
         this.masterPos = new BlockPos(compound.getInt("MasterX"), compound.getInt("MasterY"), compound.getInt("MasterZ"));
         this.hasMaster = compound.getBoolean("HasMaster");
@@ -148,7 +148,7 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
 
     @Override
     @Nonnull
-    public CompoundNBT write(CompoundNBT compound) {
+    public CompoundNBT write(@Nonnull CompoundNBT compound) {
         super.write(compound);
         compound.putInt("MasterX", this.masterPos.getX());
         compound.putInt("MasterY", this.masterPos.getY());
@@ -178,7 +178,9 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
 
     @Override
     public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
-        this.read(this.world.getBlockState(pkt.getPos()), pkt.getNbtCompound());
+        if (this.world != null) {
+            this.read(this.world.getBlockState(pkt.getPos()), pkt.getNbtCompound());
+        }
     }
 
     /**
@@ -195,11 +197,11 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
     /**
      * Collect Item Entities.
      */
-    public void onEntityCollision(World world, Entity entity) {
+    public void onEntityCollision(Entity entity) {
         if (!this.isMaster()) {
             FairyRingTileEntity master = this.getMaster();
             if (master != null) {
-                master.onEntityCollision(world, entity);
+                master.onEntityCollision(entity);
             }
         } else {
             if (entity instanceof ItemEntity) {
@@ -362,7 +364,7 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
      * Called periodically client side by FairyRingBlocks near the player to show effects.
      */
     @OnlyIn(Dist.CLIENT)
-    public void animateTick(BlockState stateIn, World worldIn, BlockPos pos, Random rand) {
+    public void animateTick(World worldIn, Random rand) {
         if (this.isMaster()) {
             Vector3d center = this.getCenter();
             boolean runningRecipe = this.recipeTime < this.recipeTimeTotal;
@@ -412,17 +414,15 @@ public class FairyRingTileEntity extends TileEntity implements IInventory, ITick
     public boolean receiveClientEvent(int id, int param) {
         //in tick() method
         //this.getWorld().addBlockEvent(this.getPos(), ExtendedMushroomsBlocks.FAIRY_RING, EFFECT_EVENT, 0);
-        switch (id) {
-            case EFFECT_EVENT: {
-                if (this.getWorld() != null && this.getWorld().isRemote) {
-                    Vector3d center = this.getCenter();
-                    //TODO some nice effects!
-                    this.getWorld().addParticle(ParticleTypes.MYCELIUM, center.x, center.y, center.z, 0.0D, 0.0D, 0.0D);
-                }
-                return true;
+        if (id == EFFECT_EVENT) {
+            if (this.getWorld() != null && this.getWorld().isRemote) {
+                Vector3d center = this.getCenter();
+                //TODO some nice effects!
+                this.getWorld().addParticle(ParticleTypes.MYCELIUM, center.x, center.y, center.z, 0.0D, 0.0D, 0.0D);
             }
-            default: return super.receiveClientEvent(id, param);
+            return true;
         }
+        return super.receiveClientEvent(id, param);
     }
 
     public FairyRingMode getMode() {

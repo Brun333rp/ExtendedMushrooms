@@ -1,59 +1,33 @@
 package cech12.extendedmushrooms.client.renderer.tileentity;
 
-import cech12.extendedmushrooms.ExtendedMushrooms;
-import cech12.extendedmushrooms.api.entity.ExtendedMushroomsEntityTypes;
-import cech12.extendedmushrooms.api.recipe.FairyRingMode;
 import cech12.extendedmushrooms.client.ClientTickObserver;
-import cech12.extendedmushrooms.client.renderer.entity.FairyRenderer;
-import cech12.extendedmushrooms.entity.passive.FairyEntity;
 import cech12.extendedmushrooms.tileentity.FairyRingTileEntity;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.entity.WitchRenderer;
 import net.minecraft.client.renderer.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.texture.AtlasTexture;
 import net.minecraft.client.renderer.tileentity.TileEntityRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.entity.EntityPredicate;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.monster.WitchEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Quaternion;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
 
 public class FairyRingTileEntityRenderer extends TileEntityRenderer<FairyRingTileEntity> {
 
-    private FairyRenderer fairyRenderer;
-    private FairyEntity fairyEntity;
-    private FairyRingWitchRenderer witchRenderer;
-    private WitchEntity witchEntity;
+    //private FairyRingWitchRenderer witchRenderer;
+    //private WitchEntity witchEntity;
 
     public FairyRingTileEntityRenderer(TileEntityRendererDispatcher dispatcher) {
         super(dispatcher);
     }
 
+    /*
     private EntityRendererManager getEntityRendererManager() {
         return Minecraft.getInstance().getRenderManager();
-    }
-
-    private FairyRenderer getFairyRenderer() {
-        return (this.fairyRenderer == null) ? (this.fairyRenderer = new FairyRenderer(this.getEntityRendererManager())) : this.fairyRenderer;
-    }
-
-    private FairyEntity getFairyEntity(World world) {
-        if (this.fairyEntity == null) {
-            this.fairyEntity = new FairyEntity((EntityType<FairyEntity>) ExtendedMushroomsEntityTypes.FAIRY, world);
-            this.fairyEntity.setNoAI(true);
-        }
-        return this.fairyEntity;
     }
 
     private FairyRingWitchRenderer getWitchRenderer() {
@@ -67,6 +41,7 @@ public class FairyRingTileEntityRenderer extends TileEntityRenderer<FairyRingTil
         }
         return this.witchEntity;
     }
+     */
 
     @Override
     public void render(@Nonnull FairyRingTileEntity fairyRing, float partticks, @Nonnull MatrixStack matrixStack, @Nonnull IRenderTypeBuffer iRenderTypeBuffer, int p1, int p2) {
@@ -118,6 +93,7 @@ public class FairyRingTileEntityRenderer extends TileEntityRenderer<FairyRingTil
             }
 
             //render entity inside of ring
+            /*
             if (fairyRing.getMode() != FairyRingMode.NORMAL) {
                 matrixStack.push();
                 //let entity look into players direction
@@ -140,18 +116,20 @@ public class FairyRingTileEntityRenderer extends TileEntityRenderer<FairyRingTil
                 }
                 if (fairyRing.getMode() == FairyRingMode.FAIRY) {
                     FairyEntity entity = this.getFairyEntity(fairyRing.getWorld());
-                    this.getFairyRenderer().render(entity, /*yaw:*/0, partticks, matrixStack, iRenderTypeBuffer, this.getEntityRendererManager().getPackedLight(entity, partticks));
+                    this.getFairyRenderer().render(entity, 0, partticks, matrixStack, iRenderTypeBuffer, this.getEntityRendererManager().getPackedLight(entity, partticks));
                 } else if (fairyRing.getMode() == FairyRingMode.WITCH) {
                     WitchEntity entity = this.getWitchEntity(fairyRing.getWorld());
-                    this.getWitchRenderer().render(entity, /*yaw:*/0, partticks, matrixStack, iRenderTypeBuffer, this.getEntityRendererManager().getPackedLight(entity, partticks));
+                    this.getWitchRenderer().render(entity, 0, partticks, matrixStack, iRenderTypeBuffer, this.getEntityRendererManager().getPackedLight(entity, partticks));
                 }
                 matrixStack.pop();
             }
+             */
 
             matrixStack.pop();
         }
     }
 
+    /*
     private static class FairyRingWitchRenderer extends WitchRenderer {
 
         private final ResourceLocation WITCH_TEXTURES = new ResourceLocation(ExtendedMushrooms.MOD_ID, "textures/entity/witch.png");
@@ -166,5 +144,6 @@ public class FairyRingTileEntityRenderer extends TileEntityRenderer<FairyRingTil
             return WITCH_TEXTURES;
         }
     }
+     */
 
 }

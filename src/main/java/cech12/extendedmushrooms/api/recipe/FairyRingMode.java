@@ -6,8 +6,8 @@ public enum FairyRingMode {
     FAIRY(1, "fairy"),
     WITCH(2, "witch");
 
-    private int id;
-    private String name;
+    private final int id;
+    private final String name;
 
     FairyRingMode(int id, String name) {
         this.id = id;
